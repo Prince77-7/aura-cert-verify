@@ -34,12 +34,15 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
           height: styles.height,
           fontFamily: styles.fontFamily,
           position: "relative",
-          padding: "20px",
+          padding: "40px", // Increased padding for better layout
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "space-between",
+          // Ensure proper rendering for PDF
+          pageBreakInside: "avoid",
+          breakInside: "avoid",
         }}
       >
         {/* Logo */}
@@ -49,13 +52,16 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             width: styles.logoStyles.width,
             height: styles.logoStyles.height,
             margin: styles.logoStyles.margin,
+            // Force text rendering as vectors when possible
+            textRendering: "geometricPrecision",
           }}
         >
           {/* Logo would go here */}
         </div>
 
         {/* Header */}
-        <div className="certificate-content w-full flex-1 flex flex-col items-center justify-center">
+        <div className="certificate-content w-full flex-1 flex flex-col items-center justify-center" 
+             style={{ minHeight: "200px" }}>
           <h1
             className="certificate-title"
             style={{
@@ -66,6 +72,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               marginTop: styles.titleStyles.marginTop,
               marginBottom: styles.titleStyles.marginBottom,
               width: "100%",
+              // Improve text rendering
+              textRendering: "geometricPrecision",
             }}
           >
             {certificate.title}
@@ -81,6 +89,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               marginTop: styles.recipientStyles.marginTop,
               marginBottom: styles.recipientStyles.marginBottom,
               width: "100%",
+              // Improve text rendering
+              textRendering: "geometricPrecision",
             }}
           >
             {certificate.recipientName}
@@ -97,6 +107,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
                 marginTop: styles.descriptionStyles.marginTop,
                 marginBottom: styles.descriptionStyles.marginBottom,
                 width: "100%",
+                // Improve text rendering
+                textRendering: "geometricPrecision",
+                lineHeight: "1.5",
               }}
             >
               {certificate.description}
@@ -113,6 +126,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               marginTop: styles.dateStyles.marginTop,
               marginBottom: styles.dateStyles.marginBottom,
               width: "100%",
+              // Improve text rendering
+              textRendering: "geometricPrecision",
             }}
           >
             <p>Issue Date: {formatDate(certificate.issueDate)}</p>
@@ -121,7 +136,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         </div>
 
         {/* Footer with issuer and signature */}
-        <div className="certificate-footer w-full flex flex-col items-center">
+        <div className="certificate-footer w-full flex flex-col items-center mt-8">
           <div
             className="certificate-signature"
             style={{
@@ -129,6 +144,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               height: styles.signatureStyles.height,
               margin: styles.signatureStyles.margin,
               borderTop: "1px solid #000",
+              // Improve rendering
+              textRendering: "geometricPrecision",
             }}
           >
             {/* Signature line */}
@@ -143,6 +160,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               textAlign: styles.issuerStyles.textAlign as any,
               marginTop: styles.issuerStyles.marginTop,
               marginBottom: styles.issuerStyles.marginBottom,
+              // Improve text rendering
+              textRendering: "geometricPrecision",
             }}
           >
             {certificate.issuerName}
@@ -158,6 +177,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             right: "10px",
             fontSize: "12px",
             color: "#666",
+            // Improve text rendering
+            textRendering: "geometricPrecision",
           }}
         >
           ID: {certificate.certificationId}

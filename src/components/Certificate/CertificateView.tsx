@@ -6,7 +6,6 @@ import { getTemplateById, getDefaultTemplate } from "../../services/templateServ
 import CertificatePreview from "./CertificatePreview";
 import { generatePDF } from "../../utils/pdfUtils";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,7 +52,12 @@ export const CertificateView: React.FC<CertificateViewProps> = ({ certificate })
     }
     
     const fileName = `${certificate.title.replace(/\s+/g, '_')}_${certificate.recipientName.replace(/\s+/g, '_')}`;
-    await generatePDF(certificateRef.current, fileName);
+    
+    // Better options for PDF generation
+    await generatePDF(certificateRef.current, fileName, {
+      scale: 4,
+      format: "a4"
+    });
   };
   
   return (
