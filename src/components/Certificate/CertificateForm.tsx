@@ -61,9 +61,15 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
 
   const onSubmit = (values: FormValues) => {
     try {
+      // Fix the TypeError by ensuring all required properties are provided
       const certificate = createCertificate({
-        ...values,
-        templateId: selectedTemplate.id, 
+        recipientName: values.recipientName,
+        title: values.title,
+        issueDate: values.issueDate,
+        expiryDate: values.expiryDate || undefined,
+        issuerName: values.issuerName,
+        description: values.description || undefined,
+        templateId: selectedTemplate.id,
       });
       
       form.reset();

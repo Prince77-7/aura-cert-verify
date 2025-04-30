@@ -3,14 +3,27 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 
-export const generatePDF = async (element: HTMLElement, fileName: string = "certificate"): Promise<void> => {
+interface PDFOptions {
+  quality?: number;
+  filename?: string;
+}
+
+export const generatePDF = async (
+  element: HTMLElement, 
+  fileName: string = "certificate", 
+  options: PDFOptions = {}
+): Promise<void> => {
   try {
     toast.info("Preparing PDF...");
     
+    const scale = options.quality || 2; // Default to 2x scale for better quality
+    
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: scale,
       useCORS: true,
       logging: false,
+      allowTaint: true,
+      backgroundColor: null,
     });
 
     const imgData = canvas.toDataURL("image/png");

@@ -8,7 +8,7 @@ import { generatePDF } from "../../utils/pdfUtils";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
 import { toast } from "sonner";
-import { FilePdf } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface CertificateViewProps {
   certificate: Certificate;
@@ -53,7 +53,7 @@ export const CertificateView: React.FC<CertificateViewProps> = ({ certificate })
           onClick={handleDownloadPDF}
           className="w-full"
         >
-          <FilePdf className="mr-2" />
+          <FileText className="mr-2" />
           Download as PDF
         </Button>
       </CardFooter>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
 import { getTemplateById, getDefaultTemplate } from "../../services/templateService";
 import CertificateView from "./CertificateView";
-import { FilePdf } from "lucide-react";
+import { FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface CertificateCardProps {
@@ -117,7 +117,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
-              <FilePdf className="mr-2 h-4 w-4" />
+              <FileText className="mr-2 h-4 w-4" />
               View/Download
             </Button>
           </DialogTrigger>
