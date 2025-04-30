@@ -1,14 +1,23 @@
-
 import { supabase } from "../integrations/supabase/client";
 import { CertificateTemplate } from "../types/CertificateTemplate";
 import { v4 as uuidv4 } from "uuid";
 
 // Map database object to CertificateTemplate type
 const mapToTemplate = (dbTemplate: any): CertificateTemplate => {
+  // Basic validation: Ensure dbTemplate is an object and has an id
+  if (!dbTemplate || typeof dbTemplate !== 'object' || !dbTemplate.id) {
+    console.error("Invalid dbTemplate received in mapToTemplate:", dbTemplate);
+    // Return a default/empty structure or throw an error
+    // Returning an empty structure might hide errors, throwing might be better depending on desired behavior.
+    // For now, let's throw to make the issue visible during development.
+    throw new Error("Invalid template data received from database.");
+  }
+
   return {
     id: dbTemplate.id,
     name: dbTemplate.name,
     description: dbTemplate.description || "",
+    markupgo_template_id: dbTemplate.markupgo_template_id || "", // Map the new field, provide default
     createdAt: dbTemplate.created_at,
     updatedAt: dbTemplate.updated_at,
     styles: dbTemplate.styles
@@ -19,25 +28,30 @@ const mapToTemplate = (dbTemplate: any): CertificateTemplate => {
 export const getTemplates = async (): Promise<CertificateTemplate[]> => {
   try {
     // Get both user templates and system templates
+    // Explicitly select columns including the new one
     const { data, error } = await supabase
       .from("certificate_templates")
-      .select("*");
+      .select("id, name, description, markupgo_template_id, created_at, updated_at, styles");
     
     if (error) throw error;
-    return data.map(mapToTemplate);
+    // Ensure data is an array before mapping
+    return Array.isArray(data) ? data.map(mapToTemplate) : [];
   } catch (error) {
     console.error("Error fetching templates:", error);
-    // Fallback to local storage
-    return JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    // Fallback to local storage - Note: LocalStorage data might not have the new field!
+    const localData = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    // Attempt to map local data too, handling potential missing fields
+    return Array.isArray(localData) ? localData.map(item => ({ ...mapToTemplate({}), ...item })) : []; // Provide defaults
   }
 };
 
 // Get default template
 export const getDefaultTemplate = async (): Promise<CertificateTemplate> => {
   try {
+    // Explicitly select columns including the new one
     const { data, error } = await supabase
       .from("certificate_templates")
-      .select("*")
+      .select("id, name, description, markupgo_template_id, created_at, updated_at, styles")
       .eq("is_system", true)
       .limit(1)
       .single();
@@ -54,10 +68,11 @@ export const getDefaultTemplate = async (): Promise<CertificateTemplate> => {
     }
     
     // Create a default template if none exists
-    const defaultTemplate = {
+    const defaultTemplate: CertificateTemplate = {
       id: uuidv4(),
       name: "Default Template",
       description: "Default certificate template",
+      markupgo_template_id: "default-markupgo-id", // Provide a default markupgo ID here too
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       styles: {
@@ -134,7 +149,8 @@ export const getTemplateById = async (id: string): Promise<CertificateTemplate |
   try {
     const { data, error } = await supabase
       .from("certificate_templates")
-      .select("*")
+      // Explicitly select columns including the new one
+      .select("id, name, description, markupgo_template_id, created_at, updated_at, styles")
       .eq("id", id)
       .single();
     
@@ -154,6 +170,7 @@ export const createTemplate = async (template: Omit<CertificateTemplate, "id" | 
   const newTemplate = {
     name: template.name,
     description: template.description,
+    markupgo_template_id: template.markupgo_template_id, // Add the field
     styles: template.styles
   };
 
@@ -171,10 +188,11 @@ export const createTemplate = async (template: Omit<CertificateTemplate, "id" | 
     
     // Fallback to local storage
     const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
-    const localNewTemplate = {
+    const localNewTemplate: CertificateTemplate = { // Ensure type safety
       id: uuidv4(),
       name: template.name,
-      description: template.description,
+      description: template.description || "",
+      markupgo_template_id: template.markupgo_template_id, // Add the field
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       styles: template.styles
@@ -191,6 +209,7 @@ export const updateTemplate = async (id: string, template: Omit<CertificateTempl
   const updatedTemplate = {
     name: template.name,
     description: template.description,
+    markupgo_template_id: template.markupgo_template_id, // Add the field
     styles: template.styles,
     updated_at: new Date().toISOString()
   };
@@ -216,6 +235,7 @@ export const updateTemplate = async (id: string, template: Omit<CertificateTempl
           ...t, 
           name: template.name, 
           description: template.description, 
+          markupgo_template_id: template.markupgo_template_id, // Add the field
           styles: template.styles, 
           updatedAt: new Date().toISOString()
         };

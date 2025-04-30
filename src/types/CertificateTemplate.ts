@@ -1,8 +1,8 @@
-
 export interface CertificateTemplate {
   id: string;
   name: string;
   description?: string;
+  markupgo_template_id: string;
   createdAt: string;
   updatedAt: string;
   styles: {

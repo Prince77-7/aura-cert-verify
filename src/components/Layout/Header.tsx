@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "../ui/button";
-import { LogOut, Lock } from "lucide-react";
+import { LogOut, Lock, Settings } from "lucide-react";
 
 export const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -43,6 +42,16 @@ export const Header: React.FC = () => {
               }`}
             >
               Admin Dashboard
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link 
+              to="/settings" 
+              className={`transition-colors hover:text-foreground/80 ${
+                location.pathname === "/settings" ? "text-foreground font-medium" : "text-foreground/60"
+              }`}
+            >
+              Settings
             </Link>
           )}
         </nav>
@@ -88,6 +97,11 @@ export const Header: React.FC = () => {
           {isAuthenticated && (
             <Link to="/admin" className={`px-3 py-1 whitespace-nowrap ${location.pathname.startsWith("/admin") ? "text-foreground font-medium" : "text-foreground/60"}`}>
               Admin
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link to="/settings" className={`px-3 py-1 whitespace-nowrap ${location.pathname === "/settings" ? "text-foreground font-medium" : "text-foreground/60"}`}>
+              Settings
             </Link>
           )}
         </div>

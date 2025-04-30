@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +33,7 @@ import { toast } from "sonner";
 const formSchema = z.object({
   name: z.string().min(1, "Template name is required"),
   description: z.string().optional(),
+  markupgo_template_id: z.string().min(1, "MarkupGo Template ID is required"),
   styles: z.object({
     backgroundColor: z.string(),
     backgroundImage: z.string().optional(),
@@ -148,13 +148,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave
     defaultValues: {
       name: template.name,
       description: template.description || "",
+      markupgo_template_id: template.markupgo_template_id || "",
       styles: template.styles,
     },
   });
 
   const onSubmit = (values: FormValues) => {
     try {
-      onSave(values);
+      onSave(values as Omit<CertificateTemplate, "id" | "createdAt" | "updatedAt">);
       toast.success("Template saved");
     } catch (error) {
       toast.error("Failed to save template");
@@ -179,6 +180,20 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSave
                     <FormLabel>Template Name</FormLabel>
                     <FormControl>
                       <Input placeholder="My Certificate Template" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="markupgo_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>MarkupGo Template ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter the ID from markupgo.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

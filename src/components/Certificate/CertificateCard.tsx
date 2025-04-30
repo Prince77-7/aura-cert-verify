@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Certificate } from "../../types/Certificate";
 import { CertificateTemplate } from "../../types/CertificateTemplate";
@@ -7,7 +6,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
 import { getTemplateById, getDefaultTemplate } from "../../services/templateService";
-import CertificateView from "./CertificateView";
+import { CertificateView } from "./CertificateView";
 import { FileText, Pencil } from "lucide-react";
 import { toast } from "sonner";
 

@@ -17,7 +17,8 @@ const mapToCertificate = (dbCertificate: any): Certificate => {
     status: dbCertificate.status,
     metadata: dbCertificate.metadata,
     templateId: dbCertificate.template_id,
-    customStyles: dbCertificate.custom_styles
+    customStyles: dbCertificate.custom_styles,
+    customData: dbCertificate.custom_data // Map from database custom_data to customData in the app
   };
 };
 
@@ -100,7 +101,8 @@ export const createCertificate = async (certificateData: Omit<Certificate, "id" 
       status: 'active',
       metadata: certificateData.metadata,
       template_id: certificateData.templateId,
-      custom_styles: certificateData.customStyles
+      custom_styles: certificateData.customStyles,
+      custom_data: certificateData.customData // Add custom_data field for Supabase
     };
 
     const { data, error } = await supabase
@@ -128,7 +130,8 @@ export const createCertificate = async (certificateData: Omit<Certificate, "id" 
       status: 'active' as const,
       metadata: certificateData.metadata,
       templateId: certificateData.templateId,
-      customStyles: certificateData.customStyles
+      customStyles: certificateData.customStyles,
+      customData: certificateData.customData // Add customData for local storage
     };
     
     certificates.push(localNewCertificate);
