@@ -6,7 +6,7 @@ import { getTemplateById, getDefaultTemplate } from "../../services/templateServ
 import CertificatePreview from "./CertificatePreview";
 import { generatePDF } from "../../utils/pdfUtils";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
+import { Card } from "../ui/card";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,18 +57,15 @@ export const CertificateView: React.FC<CertificateViewProps> = ({ certificate })
   };
   
   return (
-    <Card className="glass w-full">
-      <CardHeader>
-        <CardTitle>Certificate Preview</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full h-full">
+      <div className="flex-1 w-full overflow-hidden flex items-center justify-center bg-transparent">
         {loading || !template ? (
-          <div className="w-full">
-            <Skeleton className="h-96 w-full" />
+          <div className="w-full flex items-center justify-center">
+            <Skeleton className="h-96 w-full max-w-md" />
           </div>
         ) : (
-          <div className="w-full overflow-auto">
-            <div className="scale-[0.6] origin-top-left transform">
+          <div className="certificate-container w-full flex items-center justify-center overflow-auto p-4">
+            <div className="transform-gpu" style={{ transform: "scale(0.85)", transformOrigin: "center" }}>
               <CertificatePreview
                 ref={certificateRef}
                 certificate={certificate}
@@ -77,18 +74,19 @@ export const CertificateView: React.FC<CertificateViewProps> = ({ certificate })
             </div>
           </div>
         )}
-      </CardContent>
-      <CardFooter>
+      </div>
+      
+      <div className="w-full mt-4">
         <Button 
           onClick={handleDownloadPDF}
-          className="w-full"
+          className="w-full bg-primary hover:bg-primary/90"
           disabled={loading || !template}
         >
           <FileText className="mr-2" />
           Download as PDF
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 

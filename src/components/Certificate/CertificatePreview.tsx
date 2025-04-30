@@ -25,7 +25,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
     return (
       <div
         ref={ref}
-        className="certificate-preview mx-auto"
+        className="certificate-preview mx-auto shadow-xl"
         style={{
           backgroundColor: styles.backgroundColor,
           backgroundImage: styles.backgroundImage ? `url(${styles.backgroundImage})` : "none",

@@ -142,8 +142,10 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
               View/Download
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px]">
-            <CertificateView certificate={certificate} />
+          <DialogContent className="sm:max-w-3xl md:max-w-4xl p-0 overflow-hidden bg-transparent border-0 backdrop-blur-none">
+            <div className="bg-background/80 backdrop-blur-xl rounded-lg p-6 w-full h-full">
+              <CertificateView certificate={certificate} />
+            </div>
           </DialogContent>
         </Dialog>
         
