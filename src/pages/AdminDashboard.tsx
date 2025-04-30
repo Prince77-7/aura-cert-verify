@@ -6,10 +6,13 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import CertificateForm from "../components/Certificate/CertificateForm";
 import CertificateList from "../components/Certificate/CertificateList";
-import { getCertificates, revokeCertificate, deleteCertificate } from "../services/certificateService";
+import { getCertificates, revokeCertificate, deleteCertificate, getCertificateById } from "../services/certificateService";
+import { getTemplateById } from "../services/templateService";
 import { Certificate } from "../types/Certificate";
+import { CertificateTemplate } from "../types/CertificateTemplate";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import AdvancedCertificateEditor from "@/components/Certificate/AdvancedCertificateEditor";
 
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -17,6 +20,11 @@ const AdminDashboard: React.FC = () => {
   const [newCertificateId, setNewCertificateId] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedCertificateId, setSelectedCertificateId] = useState<string | null>(null);
+  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
+  const [activeTab, setActiveTab] = useState("certificates");
+  const [loadingCertificateEditor, setLoadingCertificateEditor] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -33,6 +41,41 @@ const AdminDashboard: React.FC = () => {
         });
     }
   }, [isAuthenticated, refreshCount]);
+
+  useEffect(() => {
+    if (selectedCertificateId) {
+      loadCertificateAndTemplate(selectedCertificateId);
+    }
+  }, [selectedCertificateId]);
+
+  const loadCertificateAndTemplate = async (certId: string) => {
+    setLoadingCertificateEditor(true);
+    try {
+      const certificate = await getCertificateById(certId);
+      if (certificate) {
+        setSelectedCertificate(certificate);
+        
+        // Load template
+        if (certificate.templateId) {
+          const template = await getTemplateById(certificate.templateId);
+          if (template) {
+            setSelectedTemplate(template);
+          } else {
+            toast.error("Certificate template not found");
+          }
+        } else {
+          toast.error("Certificate has no template assigned");
+        }
+      } else {
+        toast.error("Certificate not found");
+      }
+    } catch (error) {
+      console.error("Error loading certificate and template:", error);
+      toast.error("Failed to load certificate data");
+    } finally {
+      setLoadingCertificateEditor(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -67,6 +110,20 @@ const AdminDashboard: React.FC = () => {
     setNewCertificateId(certificationId);
   };
 
+  const handleEditCertificate = (certId: string) => {
+    setSelectedCertificateId(certId);
+    setActiveTab("customize");
+  };
+
+  const handleCertificateUpdate = (updatedCertificate: Certificate) => {
+    // Update certificates list
+    const updatedCertificates = certificates.map(cert => 
+      cert.id === updatedCertificate.id ? updatedCertificate : cert
+    );
+    setCertificates(updatedCertificates);
+    setSelectedCertificate(updatedCertificate);
+  };
+
   return (
     <div className="container py-8 md:py-12">
       <div className="space-y-2 mb-8">
@@ -76,10 +133,11 @@ const AdminDashboard: React.FC = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="certificates" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full max-w-3xl grid-cols-3">
           <TabsTrigger value="certificates">View Certificates</TabsTrigger>
           <TabsTrigger value="create">Create Certificate</TabsTrigger>
+          <TabsTrigger value="customize" disabled={!selectedCertificateId}>Customize Certificate</TabsTrigger>
         </TabsList>
         
         <TabsContent value="certificates" className="mt-6">
@@ -121,6 +179,7 @@ const AdminDashboard: React.FC = () => {
                 certificates={certificates}
                 onRevoke={handleRevoke}
                 onDelete={handleDelete}
+                onEdit={handleEditCertificate}
               />
             )}
           </div>
@@ -128,6 +187,34 @@ const AdminDashboard: React.FC = () => {
         
         <TabsContent value="create" className="mt-6">
           <CertificateForm onSuccess={handleCreateSuccess} />
+        </TabsContent>
+
+        <TabsContent value="customize" className="mt-6">
+          {loadingCertificateEditor ? (
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-80" />
+              <Skeleton className="h-[600px] w-full" />
+            </div>
+          ) : selectedCertificate && selectedTemplate ? (
+            <AdvancedCertificateEditor 
+              certificate={selectedCertificate}
+              template={selectedTemplate}
+              onUpdate={handleCertificateUpdate}
+            />
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-medium mb-2">No Certificate Selected</h3>
+              <p className="text-muted-foreground mb-6">
+                Please select a certificate from the list to customize
+              </p>
+              <Button 
+                onClick={() => setActiveTab("certificates")}
+                variant="outline"
+              >
+                Go to Certificates
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

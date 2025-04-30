@@ -1,32 +1,44 @@
 
+import { supabase } from "../integrations/supabase/client";
 import { Certificate } from "../types/Certificate";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
+// Map database object to Certificate type
+const mapToCertificate = (dbCertificate: any): Certificate => {
+  return {
+    id: dbCertificate.id,
+    recipientName: dbCertificate.recipient_name,
+    title: dbCertificate.title,
+    issueDate: dbCertificate.issue_date,
+    expiryDate: dbCertificate.expiry_date,
+    issuerName: dbCertificate.issuer_name,
+    description: dbCertificate.description,
+    certificationId: dbCertificate.certification_id,
+    status: dbCertificate.status,
+    metadata: dbCertificate.metadata,
+    templateId: dbCertificate.template_id,
+    customStyles: dbCertificate.custom_styles
+  };
+};
+
+// Get all certificates for the authenticated user
 export const getCertificates = async (): Promise<Certificate[]> => {
   try {
     const { data, error } = await supabase
       .from("certificates")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
     
-    if (error) {
-      toast.error(`Error fetching certificates: ${error.message}`);
-      throw error;
-    }
-    
-    return data as Certificate[];
+    if (error) throw error;
+    return data.map(mapToCertificate);
   } catch (error) {
     console.error("Error fetching certificates:", error);
-    
-    // Fallback to localStorage in case of error
-    const storedData = localStorage.getItem("aura_certificates");
-    return storedData ? JSON.parse(storedData) : [];
+    // Fallback to local storage
+    return JSON.parse(localStorage.getItem("aura_certificates") || "[]");
   }
 };
 
-export const getCertificateById = async (id: string): Promise<Certificate | undefined> => {
+// Get certificate by ID
+export const getCertificateById = async (id: string): Promise<Certificate | null> => {
   try {
     const { data, error } = await supabase
       .from("certificates")
@@ -34,273 +46,153 @@ export const getCertificateById = async (id: string): Promise<Certificate | unde
       .eq("id", id)
       .single();
     
-    if (error) {
-      if (error.code !== "PGRST116") { // Don't show error for "no rows returned"
-        toast.error(`Error fetching certificate: ${error.message}`);
-      }
-      return undefined;
-    }
-    
-    return data as Certificate;
+    if (error) throw error;
+    return mapToCertificate(data);
   } catch (error) {
-    console.error("Error fetching certificate by ID:", error);
-    
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    return certificates.find(cert => cert.id === id);
+    console.error("Error fetching certificate:", error);
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    return certificates.find((cert: Certificate) => cert.id === id) || null;
   }
 };
 
-export const getCertificateByVerificationId = async (certificationId: string): Promise<Certificate | undefined> => {
+// Get certificate by verification ID
+export const getCertificateByVerificationId = async (verificationId: string): Promise<Certificate | null> => {
   try {
     const { data, error } = await supabase
       .from("certificates")
       .select("*")
-      .eq("certification_id", certificationId)
+      .eq("certification_id", verificationId)
+      .eq("status", "active")
       .single();
     
-    if (error) {
-      if (error.code !== "PGRST116") { // Don't show error for "no rows returned"
-        console.error(`Error fetching certificate: ${error.message}`);
-      }
-      return undefined;
-    }
-    
-    return data as Certificate;
+    if (error) throw error;
+    return mapToCertificate(data);
   } catch (error) {
     console.error("Error fetching certificate by verification ID:", error);
-    
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    return certificates.find(cert => cert.certificationId === certificationId);
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    return certificates.find((cert: Certificate) => cert.certificationId === verificationId && cert.status === "active") || null;
   }
 };
 
-export const createCertificate = async (
-  certificateData: Omit<Certificate, "id" | "certificationId" | "status">
-): Promise<Certificate> => {
-  // Generate a unique verification code
-  const certificationId = generateVerificationCode();
-  
+// Create a new certificate
+export const createCertificate = async (certificateData: Omit<Certificate, "id" | "status" | "certificationId">): Promise<Certificate> => {
+  const newCertificate = {
+    recipient_name: certificateData.recipientName,
+    title: certificateData.title,
+    issue_date: certificateData.issueDate,
+    expiry_date: certificateData.expiryDate,
+    issuer_name: certificateData.issuerName,
+    description: certificateData.description,
+    certification_id: `CERT-${uuidv4().substring(0, 8).toUpperCase()}`,
+    status: 'active',
+    metadata: certificateData.metadata,
+    template_id: certificateData.templateId,
+    custom_styles: certificateData.customStyles
+  };
+
   try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      throw new Error("User not authenticated");
-    }
-    
-    const newCertificate = {
-      ...certificateData,
-      certification_id: certificationId,
-      status: "active",
-      user_id: user.user.id
-    };
-    
     const { data, error } = await supabase
       .from("certificates")
       .insert(newCertificate)
       .select()
       .single();
     
-    if (error) {
-      toast.error(`Error creating certificate: ${error.message}`);
-      throw error;
-    }
-    
-    toast.success("Certificate created successfully");
-    
-    // Convert from snake_case to camelCase for frontend use
-    return {
-      id: data.id,
-      recipientName: data.recipient_name,
-      title: data.title,
-      issueDate: data.issue_date,
-      expiryDate: data.expiry_date,
-      issuerName: data.issuer_name,
-      description: data.description,
-      certificationId: data.certification_id,
-      status: data.status,
-      metadata: data.metadata,
-      templateId: data.template_id,
-      customStyles: data.custom_styles
-    } as Certificate;
+    if (error) throw error;
+    return mapToCertificate(data);
   } catch (error) {
     console.error("Error creating certificate:", error);
     
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    
-    const newCertificate: Certificate = {
-      ...certificateData,
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const localNewCertificate = {
       id: uuidv4(),
-      certificationId,
-      status: "active"
+      recipientName: certificateData.recipientName,
+      title: certificateData.title,
+      issueDate: certificateData.issueDate,
+      expiryDate: certificateData.expiryDate,
+      issuerName: certificateData.issuerName,
+      description: certificateData.description,
+      certificationId: `CERT-${uuidv4().substring(0, 8).toUpperCase()}`,
+      status: 'active' as const,
+      metadata: certificateData.metadata,
+      templateId: certificateData.templateId,
+      customStyles: certificateData.customStyles
     };
     
-    certificates.push(newCertificate);
+    certificates.push(localNewCertificate);
     localStorage.setItem("aura_certificates", JSON.stringify(certificates));
-    toast.success("Certificate created successfully (offline mode)");
-    
-    return newCertificate;
+    return localNewCertificate;
   }
 };
 
-export const updateCertificate = async (certificate: Certificate): Promise<Certificate> => {
+// Revoke a certificate
+export const revokeCertificate = async (id: string): Promise<void> => {
   try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      throw new Error("User not authenticated");
-    }
-    
-    // Convert to snake_case for Supabase
-    const certificateData = {
-      id: certificate.id,
-      recipient_name: certificate.recipientName,
-      title: certificate.title,
-      issue_date: certificate.issueDate,
-      expiry_date: certificate.expiryDate,
-      issuer_name: certificate.issuerName,
-      description: certificate.description,
-      certification_id: certificate.certificationId,
-      status: certificate.status,
-      metadata: certificate.metadata,
-      template_id: certificate.templateId,
-      custom_styles: certificate.customStyles,
-      user_id: user.user.id
-    };
-    
     const { error } = await supabase
       .from("certificates")
-      .update(certificateData)
-      .eq("id", certificate.id);
+      .update({ status: "revoked" })
+      .eq("id", id);
     
-    if (error) {
-      toast.error(`Error updating certificate: ${error.message}`);
-      throw error;
-    }
-    
-    toast.success("Certificate updated successfully");
-    return certificate;
+    if (error) throw error;
   } catch (error) {
-    console.error("Error updating certificate:", error);
+    console.error("Error revoking certificate:", error);
     
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    const index = certificates.findIndex(cert => cert.id === certificate.id);
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const updatedCertificates = certificates.map((cert: Certificate) => {
+      if (cert.id === id) {
+        return { ...cert, status: "revoked" };
+      }
+      return cert;
+    });
     
-    if (index !== -1) {
-      certificates[index] = certificate;
-      localStorage.setItem("aura_certificates", JSON.stringify(certificates));
-      toast.success("Certificate updated successfully (offline mode)");
-      return certificate;
-    } else {
-      toast.error("Certificate not found");
-      throw new Error("Certificate not found");
-    }
+    localStorage.setItem("aura_certificates", JSON.stringify(updatedCertificates));
   }
 };
 
-export const deleteCertificate = async (id: string): Promise<boolean> => {
+// Delete a certificate
+export const deleteCertificate = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from("certificates")
       .delete()
       .eq("id", id);
     
-    if (error) {
-      toast.error(`Error deleting certificate: ${error.message}`);
-      return false;
-    }
-    
-    toast.success("Certificate deleted successfully");
-    return true;
+    if (error) throw error;
   } catch (error) {
     console.error("Error deleting certificate:", error);
     
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    const filteredCertificates = certificates.filter(cert => cert.id !== id);
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const filteredCertificates = certificates.filter((cert: Certificate) => cert.id !== id);
     
-    if (filteredCertificates.length < certificates.length) {
-      localStorage.setItem("aura_certificates", JSON.stringify(filteredCertificates));
-      toast.success("Certificate deleted successfully (offline mode)");
-      return true;
-    } else {
-      toast.error("Certificate not found");
-      return false;
-    }
+    localStorage.setItem("aura_certificates", JSON.stringify(filteredCertificates));
   }
 };
 
-export const revokeCertificate = async (id: string): Promise<Certificate | undefined> => {
+// Update certificate custom styles
+export const updateCertificateStyles = async (id: string, customStyles: Record<string, any>): Promise<void> => {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("certificates")
-      .update({ status: "revoked" })
-      .eq("id", id)
-      .select()
-      .single();
+      .update({ custom_styles: customStyles })
+      .eq("id", id);
     
-    if (error) {
-      toast.error(`Error revoking certificate: ${error.message}`);
-      return undefined;
-    }
-    
-    toast.success("Certificate revoked successfully");
-    
-    // Convert from snake_case to camelCase for frontend use
-    return {
-      id: data.id,
-      recipientName: data.recipient_name,
-      title: data.title,
-      issueDate: data.issue_date,
-      expiryDate: data.expiry_date,
-      issuerName: data.issuer_name,
-      description: data.description,
-      certificationId: data.certification_id,
-      status: data.status,
-      metadata: data.metadata,
-      templateId: data.template_id,
-      customStyles: data.custom_styles
-    } as Certificate;
+    if (error) throw error;
   } catch (error) {
-    console.error("Error revoking certificate:", error);
+    console.error("Error updating certificate styles:", error);
     
-    // Fallback to localStorage
-    const certificates = getCertificatesFromLocalStorage();
-    const certificate = certificates.find(cert => cert.id === id);
+    // Fallback to local storage
+    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const updatedCertificates = certificates.map((cert: Certificate) => {
+      if (cert.id === id) {
+        return { ...cert, customStyles };
+      }
+      return cert;
+    });
     
-    if (certificate) {
-      certificate.status = "revoked";
-      localStorage.setItem("aura_certificates", JSON.stringify(certificates));
-      toast.success("Certificate revoked successfully (offline mode)");
-      return certificate;
-    } else {
-      toast.error("Certificate not found");
-      return undefined;
-    }
+    localStorage.setItem("aura_certificates", JSON.stringify(updatedCertificates));
   }
-};
-
-// Helper function to get certificates from localStorage
-const getCertificatesFromLocalStorage = (): Certificate[] => {
-  const storedData = localStorage.getItem("aura_certificates");
-  return storedData ? JSON.parse(storedData) : [];
-};
-
-// Generate a verification code (e.g., XXXX-XXXX-XXXX format)
-const generateVerificationCode = (): string => {
-  const segments = 3;
-  const segmentLength = 4;
-  let result = '';
-  
-  for (let i = 0; i < segments; i++) {
-    if (i > 0) result += '-';
-    for (let j = 0; j < segmentLength; j++) {
-      // Use characters that are less likely to be confused
-      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-      result += chars[Math.floor(Math.random() * chars.length)];
-    }
-  }
-  
-  return result;
 };
