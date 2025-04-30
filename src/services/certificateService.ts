@@ -24,9 +24,13 @@ const mapToCertificate = (dbCertificate: any): Certificate => {
 // Get all certificates for the authenticated user
 export const getCertificates = async (): Promise<Certificate[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No authenticated user");
+    
     const { data, error } = await supabase
       .from("certificates")
-      .select("*");
+      .select("*")
+      .eq("user_id", user.id);
     
     if (error) throw error;
     return data.map(mapToCertificate);
@@ -78,21 +82,27 @@ export const getCertificateByVerificationId = async (verificationId: string): Pr
 
 // Create a new certificate
 export const createCertificate = async (certificateData: Omit<Certificate, "id" | "status" | "certificationId">): Promise<Certificate> => {
-  const newCertificate = {
-    recipient_name: certificateData.recipientName,
-    title: certificateData.title,
-    issue_date: certificateData.issueDate,
-    expiry_date: certificateData.expiryDate,
-    issuer_name: certificateData.issuerName,
-    description: certificateData.description,
-    certification_id: `CERT-${uuidv4().substring(0, 8).toUpperCase()}`,
-    status: 'active',
-    metadata: certificateData.metadata,
-    template_id: certificateData.templateId,
-    custom_styles: certificateData.customStyles
-  };
-
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No authenticated user");
+    
+    const certificationId = `CERT-${uuidv4().substring(0, 8).toUpperCase()}`;
+    
+    const newCertificate = {
+      user_id: user.id,
+      recipient_name: certificateData.recipientName,
+      title: certificateData.title,
+      issue_date: certificateData.issueDate,
+      expiry_date: certificateData.expiryDate,
+      issuer_name: certificateData.issuerName,
+      description: certificateData.description,
+      certification_id: certificationId,
+      status: 'active',
+      metadata: certificateData.metadata,
+      template_id: certificateData.templateId,
+      custom_styles: certificateData.customStyles
+    };
+
     const { data, error } = await supabase
       .from("certificates")
       .insert(newCertificate)

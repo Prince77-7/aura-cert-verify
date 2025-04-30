@@ -7,12 +7,14 @@ interface CertificateListProps {
   certificates: Certificate[];
   onRevoke?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
 }
 
 export const CertificateList: React.FC<CertificateListProps> = ({
   certificates,
   onRevoke,
   onDelete,
+  onEdit
 }) => {
   if (certificates.length === 0) {
     return (
@@ -28,9 +30,10 @@ export const CertificateList: React.FC<CertificateListProps> = ({
         <CertificateCard
           key={certificate.id}
           certificate={certificate}
-          showActions={!!onRevoke || !!onDelete}
+          showActions={!!onRevoke || !!onDelete || !!onEdit}
           onRevoke={onRevoke}
           onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </div>

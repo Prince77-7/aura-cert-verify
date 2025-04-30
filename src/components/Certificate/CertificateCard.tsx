@@ -1,13 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Certificate } from "../../types/Certificate";
+import { CertificateTemplate } from "../../types/CertificateTemplate";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
 import { getTemplateById, getDefaultTemplate } from "../../services/templateService";
 import CertificateView from "./CertificateView";
-import { FileText } from "lucide-react";
+import { FileText, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 interface CertificateCardProps {
@@ -15,6 +16,7 @@ interface CertificateCardProps {
   showActions?: boolean;
   onRevoke?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
 }
 
 export const CertificateCard: React.FC<CertificateCardProps> = ({
@@ -22,8 +24,32 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
   showActions = false,
   onRevoke,
   onDelete,
+  onEdit,
 }) => {
   const [viewOpen, setViewOpen] = useState(false);
+  const [templateName, setTemplateName] = useState<string>("Default Template");
+  
+  useEffect(() => {
+    const loadTemplateName = async () => {
+      try {
+        let template: CertificateTemplate | undefined;
+        
+        if (certificate.templateId) {
+          template = await getTemplateById(certificate.templateId);
+        }
+        
+        if (!template) {
+          template = await getDefaultTemplate();
+        }
+        
+        setTemplateName(template.name);
+      } catch (error) {
+        console.error("Error loading template name:", error);
+      }
+    };
+    
+    loadTemplateName();
+  }, [certificate.templateId]);
   
   const statusColor = {
     active: "bg-green-500 text-white",
@@ -45,11 +71,6 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
     navigator.clipboard.writeText(certificate.certificationId);
     toast.success("Verification ID copied to clipboard");
   };
-  
-  // Get template info
-  const template = certificate.templateId 
-    ? getTemplateById(certificate.templateId)
-    : getDefaultTemplate();
 
   return (
     <Card className="w-full overflow-hidden glass">
@@ -92,7 +113,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         
         <div>
           <p className="text-sm font-medium text-muted-foreground">Template</p>
-          <p className="text-sm">{template?.name || "Default Template"}</p>
+          <p className="text-sm">{templateName}</p>
         </div>
 
         <div>
@@ -128,6 +149,17 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         
         {showActions && (
           <>
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(certificate.id)}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Customize
+              </Button>
+            )}
+            
             {certificate.status === "active" && onRevoke && (
               <Button
                 variant="destructive"

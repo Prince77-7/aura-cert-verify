@@ -46,11 +46,17 @@ export type CertificateElement = {
     backgroundBlendMode?: string;
     filter?: string;
     backdropFilter?: string;
+    borderTop?: string;
+    border?: string;
+    paddingTop?: string;
+    display?: string;
+    alignItems?: string;
+    justifyContent?: string;
   };
   metadata?: Record<string, any>;
 };
 
-export interface AdvancedCertificateTemplate extends Omit<CertificateTemplate, "styles"> {
+export interface AdvancedCertificateTemplate {
   canvas: {
     width: number;
     height: number;
