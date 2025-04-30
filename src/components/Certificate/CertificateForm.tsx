@@ -33,6 +33,7 @@ const formSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   expiryDate: z.string().optional(),
   issuerName: z.string().min(2, "Issuer name must be at least 2 characters"),
+  description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -164,6 +165,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
         issueDate: values.issueDate,
         expiryDate: values.expiryDate || undefined,
         issuerName: values.issuerName,
+        description: values.description || undefined,
         templateId: selectedTemplate.id,
         // No custom data yet
       });
@@ -306,6 +308,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
         createdAt: editingTemplate ? editingTemplate.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         styles: templateData.styles,
+        markupgo_template_id: editingTemplate?.markupgo_template_id || '',
       };
       
       if (editingTemplate) {
@@ -498,15 +501,11 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="create" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="create">Create Certificate</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="design">Design</TabsTrigger>
-        </TabsList>
+      <div className="w-full">
+        <h2 className="text-2xl font-bold mb-4">Create Certificate</h2>
         
-        <TabsContent value="create" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="mt-6">
+          <div className="grid grid-cols-1 gap-6">
             <Card className="w-full glass">
                 <CardHeader>
                   <CardTitle>Certificate Information</CardTitle>
@@ -615,6 +614,25 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
                           </FormItem>
                         )}
                       />
+                      
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Add a brief description about this certificate" 
+                                {...field}
+                                disabled={currentStep > 1 || creatingCertificateOnly}
+                                className={currentStep > 1 ? "bg-gray-100 min-h-[80px]" : "min-h-[80px]"}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       {/* STEP 1 BUTTON: Add a prominently visible button */}
                       {currentStep === 1 && !savedCertificate && (
                         <div className="mt-8 p-4 bg-blue-50 border-2 border-blue-300 rounded-md">
@@ -689,27 +707,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
                 </Form>
               </CardContent>
             </Card>
-            
-            <div className="w-full overflow-auto">
-              <h3 className="text-lg font-medium mb-4">Certificate Preview</h3>
-              <div className="scale-[0.6] origin-top-left transform">
-                {selectedTemplate && (
-                  <CertificatePreview
-                    certificate={{
-                      id: "preview",
-                      recipientName: form.getValues().recipientName || "Recipient Name",
-                      title: form.getValues().title || "Certificate Title",
-                      issueDate: form.getValues().issueDate || new Date().toISOString(),
-                      expiryDate: form.getValues().expiryDate,
-                      issuerName: form.getValues().issuerName || "Issuer Name",
-                      certificationId: "XXXX-XXXX-XXXX",
-                      status: "active" as const,
-                    }}
-                    template={selectedTemplate}
-                  />
-                )}
-              </div>
-            </div>
+
           </div>
           
           {savedCertificate && (
@@ -805,51 +803,39 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+        </div>
         
-        <TabsContent value="templates" className="mt-6">
-          <TemplateList
-            templates={templates}
-            onSelect={handleSelectTemplate}
-            onEdit={handleEditTemplate}
-            onDelete={handleDeleteTemplate}
-            onClone={handleCloneTemplate}
-          />
-        </TabsContent>
-        
-        <TabsContent value="design" className="mt-6">
-          {editingTemplate ? (
-            <>
-              <div className="flex justify-between mb-4">
-                <h2 className="text-xl font-bold">Edit Template: {editingTemplate.name}</h2>
-                <Button variant="outline" onClick={() => setEditingTemplate(null)}>
-                  Cancel Editing
-                </Button>
+        {/* Template selector simplified to only select the MarkupGo template ID */}
+        <div className="mt-6">
+          <Card className="w-full glass">
+            <CardHeader>
+              <CardTitle>MarkupGo Template</CardTitle>
+              <CardDescription>
+                Select a template for MarkupGo PDF generation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {templates.map((template) => (
+                    <Button
+                      key={template.id}
+                      variant={selectedTemplate?.id === template.id ? "default" : "outline"}
+                      className={`h-auto p-4 flex flex-col items-start ${selectedTemplate?.id === template.id ? "border-2 border-primary" : ""}`}
+                      onClick={() => handleSelectTemplate(ensureTemplateHasMarkupGoId(template))}
+                    >
+                      <div className="font-medium">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        MarkupGo ID: {template.markupgo_template_id || "Not set"}
+                      </div>
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <TemplateEditor
-                template={editingTemplate}
-                onSave={handleSaveTemplate}
-              />
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between mb-4">
-                <h2 className="text-xl font-bold">Create New Template</h2>
-              </div>
-              <TemplateEditor
-                template={{
-                  id: "",
-                  name: "New Template",
-                  createdAt: "",
-                  updatedAt: "",
-                  styles: selectedTemplate?.styles,
-                }}
-                onSave={handleSaveTemplate}
-              />
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

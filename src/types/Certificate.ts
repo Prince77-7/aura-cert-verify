@@ -5,6 +5,7 @@ export interface Certificate {
   issueDate: string;
   expiryDate?: string;
   issuerName: string;
+  description?: string; // Optional description for the certificate
   certificationId: string; // Unique ID for verification
   status: "active" | "revoked" | "expired";
   metadata?: Record<string, string>; // Additional fields

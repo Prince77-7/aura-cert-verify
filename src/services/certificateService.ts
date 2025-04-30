@@ -5,7 +5,12 @@ import { v4 as uuidv4 } from "uuid";
 
 // Map database object to Certificate type
 const mapToCertificate = (dbCertificate: any): Certificate => {
-  return {
+  if (!dbCertificate) return null as any;
+  
+  // Log the raw certificate data to debug
+  console.log('Raw DB Certificate:', dbCertificate);
+  
+  const certificate = {
     id: dbCertificate.id,
     recipientName: dbCertificate.recipient_name,
     title: dbCertificate.title,
@@ -18,8 +23,14 @@ const mapToCertificate = (dbCertificate: any): Certificate => {
     metadata: dbCertificate.metadata,
     templateId: dbCertificate.template_id,
     customStyles: dbCertificate.custom_styles,
-    customData: dbCertificate.custom_data // Map from database custom_data to customData in the app
+    customData: dbCertificate.custom_data, // Map from database custom_data to customData in the app
+    publicPdfUrl: dbCertificate.public_pdf_url // Added mapping for PDF URL
   };
+  
+  // Log the mapped certificate
+  console.log('Mapped Certificate with PDF URL:', certificate);
+  
+  return certificate;
 };
 
 // Get all certificates for the authenticated user

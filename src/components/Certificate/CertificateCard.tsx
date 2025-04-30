@@ -4,7 +4,7 @@ import { CertificateTemplate } from "../../types/CertificateTemplate";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import { getTemplateById, getDefaultTemplate } from "../../services/templateService";
 import { CertificateView } from "./CertificateView";
 import { FileText, Pencil } from "lucide-react";
@@ -133,16 +133,39 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter className="flex gap-2 justify-end border-t p-4">
+      <CardFooter className="flex flex-wrap gap-2 justify-end border-t p-4">
+        {/* Add PDF info if available */}
+        {certificate.publicPdfUrl && (
+          <div className="w-full mb-2 text-sm text-green-600 flex items-center">
+            <FileText className="h-4 w-4 mr-1" />
+            PDF document available for download
+          </div>
+        )}
+        
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+          <DialogTrigger asChild onClick={(e) => {
+            // Stop any download behavior
+            e.preventDefault();
+            e.stopPropagation();
+            // Just trigger the dialog
+            setViewOpen(true);
+          }}>
+            <Button 
+              variant={certificate.publicPdfUrl ? "default" : "outline"} 
+              size="sm" 
+              className={certificate.publicPdfUrl ? "bg-blue-600 hover:bg-blue-700" : ""}
+              type="button"
+            >
               <FileText className="mr-2 h-4 w-4" />
-              View/Download
+              View Certificate
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-3xl md:max-w-4xl p-0 overflow-hidden bg-transparent border-0 backdrop-blur-none">
             <div className="bg-background/80 backdrop-blur-xl rounded-lg p-6 w-full h-full">
+              <DialogTitle className="sr-only">Certificate Details</DialogTitle>
+              <DialogDescription className="sr-only">
+                View and download certificate for {certificate.recipientName}
+              </DialogDescription>
               <CertificateView certificate={certificate} />
             </div>
           </DialogContent>
@@ -150,16 +173,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         
         {showActions && (
           <>
-            {onEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(certificate.id)}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Customize
-              </Button>
-            )}
+            {/* Removed customization button as we're using MarkupGo for certificates */}
             
             {certificate.status === "active" && onRevoke && (
               <Button
