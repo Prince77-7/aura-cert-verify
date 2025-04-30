@@ -1,9 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Certificate } from "../../types/Certificate";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
+import { getTemplateById, getDefaultTemplate } from "../../services/templateService";
+import CertificateView from "./CertificateView";
+import { FilePdf } from "lucide-react";
 import { toast } from "sonner";
 
 interface CertificateCardProps {
@@ -19,6 +23,8 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
   onRevoke,
   onDelete,
 }) => {
+  const [viewOpen, setViewOpen] = useState(false);
+  
   const statusColor = {
     active: "bg-green-500 text-white",
     revoked: "bg-red-500 text-white",
@@ -39,6 +45,11 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
     navigator.clipboard.writeText(certificate.certificationId);
     toast.success("Verification ID copied to clipboard");
   };
+  
+  // Get template info
+  const template = certificate.templateId 
+    ? getTemplateById(certificate.templateId)
+    : getDefaultTemplate();
 
   return (
     <Card className="w-full overflow-hidden glass">
@@ -78,6 +89,11 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
             <p className="text-sm">{certificate.description}</p>
           </div>
         )}
+        
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Template</p>
+          <p className="text-sm">{template?.name || "Default Template"}</p>
+        </div>
 
         <div>
           <p className="text-sm font-medium text-muted-foreground">Verification ID</p>
@@ -97,28 +113,42 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         </div>
       </CardContent>
       
-      {showActions && (
-        <CardFooter className="flex gap-2 justify-end border-t p-4">
-          {certificate.status === "active" && onRevoke && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onRevoke(certificate.id)}
-            >
-              Revoke
+      <CardFooter className="flex gap-2 justify-end border-t p-4">
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <FilePdf className="mr-2 h-4 w-4" />
+              View/Download
             </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(certificate.id)}
-            >
-              Delete
-            </Button>
-          )}
-        </CardFooter>
-      )}
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px]">
+            <CertificateView certificate={certificate} />
+          </DialogContent>
+        </Dialog>
+        
+        {showActions && (
+          <>
+            {certificate.status === "active" && onRevoke && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onRevoke(certificate.id)}
+              >
+                Revoke
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(certificate.id)}
+              >
+                Delete
+              </Button>
+            )}
+          </>
+        )}
+      </CardFooter>
     </Card>
   );
 };

@@ -10,4 +10,6 @@ export interface Certificate {
   certificationId: string; // Unique ID for verification
   status: "active" | "revoked" | "expired";
   metadata?: Record<string, string>; // Additional fields
+  templateId?: string; // Reference to template used
+  customStyles?: Record<string, any>; // Custom styles if different from template
 }
