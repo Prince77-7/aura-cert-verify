@@ -6,35 +6,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { getCertificateByVerificationId } from "../../services/certificateService";
 import CertificateCard from "./CertificateCard";
 import { toast } from "sonner";
+import { Certificate } from "@/types/Certificate";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const CertificateVerifier: React.FC = () => {
   const [verificationId, setVerificationId] = useState("");
-  const [certificate, setCertificate] = useState<any>(null);
+  const [certificate, setCertificate] = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!verificationId.trim()) {
       toast.error("Please enter a verification ID");
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      try {
-        const result = getCertificateByVerificationId(verificationId.trim());
-        if (result) {
-          setCertificate(result);
-        } else {
-          setCertificate(null);
-          toast.error("Certificate not found");
-        }
-      } catch (error) {
-        toast.error("Verification failed");
-        console.error(error);
-      } finally {
-        setLoading(false);
+    try {
+      const result = await getCertificateByVerificationId(verificationId.trim());
+      if (result) {
+        setCertificate(result);
+      } else {
+        setCertificate(null);
+        toast.error("Certificate not found");
       }
-    }, 800); // Simulate API call
+    } catch (error) {
+      toast.error("Verification failed");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,7 +58,13 @@ export const CertificateVerifier: React.FC = () => {
           </Button>
         </div>
 
-        {certificate && (
+        {loading && (
+          <div className="animate-fade-in">
+            <Skeleton className="h-64 w-full" />
+          </div>
+        )}
+
+        {!loading && certificate && (
           <div className="animate-fade-in">
             <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900">
               <p className="text-green-700 dark:text-green-400 text-center font-medium">

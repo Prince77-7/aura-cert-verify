@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +15,7 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { createCertificate } from "../../services/certificateService";
-import { getTemplates, getTemplateById, getDefaultTemplate } from "../../services/templateService";
+import { getTemplates, getDefaultTemplate } from "../../services/templateService";
 import { CertificateTemplate } from "../../types/CertificateTemplate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import CertificatePreview from "./CertificatePreview";
@@ -24,6 +23,7 @@ import TemplateList from "./TemplateList";
 import TemplateEditor from "./TemplateEditor";
 import { generatePDF } from "../../utils/pdfUtils";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   recipientName: z.string().min(2, "Name must be at least 2 characters"),
@@ -41,10 +41,11 @@ interface CertificateFormProps {
 }
 
 export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) => {
-  const [templates, setTemplates] = useState<CertificateTemplate[]>(getTemplates());
-  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate>(getDefaultTemplate());
+  const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<CertificateTemplate | null>(null);
   const [previewCertificate, setPreviewCertificate] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const certificateRef = useRef<HTMLDivElement>(null);
   
   const form = useForm<FormValues>({
@@ -59,10 +60,34 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templatesData = await getTemplates();
+        setTemplates(templatesData);
+        
+        const defaultTemplate = await getDefaultTemplate();
+        setSelectedTemplate(defaultTemplate);
+      } catch (error) {
+        console.error("Error loading templates:", error);
+        toast.error("Failed to load templates");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadTemplates();
+  }, []);
+
+  const onSubmit = async (values: FormValues) => {
+    if (!selectedTemplate) {
+      toast.error("No template selected");
+      return;
+    }
+    
     try {
       // Fix the TypeError by ensuring all required properties are provided
-      const certificate = createCertificate({
+      const certificate = await createCertificate({
         recipientName: values.recipientName,
         title: values.title,
         issueDate: values.issueDate,
@@ -105,13 +130,30 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
     setEditingTemplate(template);
   };
 
-  const handleSaveTemplate = (templateData: Omit<CertificateTemplate, "id" | "createdAt" | "updatedAt">) => {
+  const handleSaveTemplate = (templateData: CertificateTemplate) => {
+    // Ensure that the name property is required
+    if (!templateData.name) {
+      toast.error("Template name is required");
+      return;
+    }
+    
     try {
+      // Create a properly typed object for the template service
+      const templateToSave: CertificateTemplate = {
+        id: editingTemplate ? editingTemplate.id : 'temp-id',
+        name: templateData.name,
+        description: templateData.description || '',
+        createdAt: editingTemplate ? editingTemplate.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        styles: templateData.styles,
+      };
+      
+      // This will be replaced by the service
       if (editingTemplate) {
         // Update existing template
         const updatedTemplate = {
           ...editingTemplate,
-          ...templateData,
+          ...templateToSave,
         };
         // Save to localStorage and update state
         const updatedTemplates = templates.map(t => 
@@ -124,10 +166,8 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
       } else {
         // Create new template
         const newTemplate = {
-          ...templateData,
+          ...templateToSave,
           id: `template-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         };
         const updatedTemplates = [...templates, newTemplate];
         localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
@@ -153,7 +193,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
       setTemplates(updatedTemplates);
       
       // If the deleted template was selected, switch to the first available template
-      if (selectedTemplate.id === id) {
+      if (selectedTemplate?.id === id) {
         setSelectedTemplate(updatedTemplates[0]);
       }
       
@@ -209,6 +249,18 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
       status: "active" as const,
     };
   };
+
+  if (loading || !selectedTemplate) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-full max-w-md" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[500px] w-full" />
+          <Skeleton className="h-[500px] w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -339,10 +391,12 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
             <div className="w-full overflow-auto">
               <h3 className="text-lg font-medium mb-4">Certificate Preview</h3>
               <div className="scale-[0.6] origin-top-left transform">
-                <CertificatePreview
-                  certificate={getPreviewCertificate()}
-                  template={selectedTemplate}
-                />
+                {selectedTemplate && (
+                  <CertificatePreview
+                    certificate={getPreviewCertificate()}
+                    template={selectedTemplate}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -357,11 +411,13 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
               </CardHeader>
               <CardContent>
                 <div className="hidden">
-                  <CertificatePreview
-                    ref={certificateRef}
-                    certificate={previewCertificate}
-                    template={selectedTemplate}
-                  />
+                  {selectedTemplate && (
+                    <CertificatePreview
+                      ref={certificateRef}
+                      certificate={previewCertificate}
+                      template={selectedTemplate}
+                    />
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
@@ -404,11 +460,12 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
               </div>
               <TemplateEditor
                 template={{
-                  ...getDefaultTemplate(),
                   id: "",
                   name: "New Template",
                   createdAt: "",
                   updatedAt: "",
+                  description: "Default certificate template",
+                  styles: selectedTemplate.styles,
                 }}
                 onSave={handleSaveTemplate}
               />

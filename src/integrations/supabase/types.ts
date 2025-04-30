@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      certificate_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_system: boolean
+          name: string
+          styles: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          styles: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          styles?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          certification_id: string
+          created_at: string
+          custom_styles: Json | null
+          description: string | null
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          issuer_name: string
+          metadata: Json | null
+          recipient_name: string
+          status: string
+          template_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certification_id: string
+          created_at?: string
+          custom_styles?: Json | null
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date: string
+          issuer_name: string
+          metadata?: Json | null
+          recipient_name: string
+          status?: string
+          template_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certification_id?: string
+          created_at?: string
+          custom_styles?: Json | null
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issuer_name?: string
+          metadata?: Json | null
+          recipient_name?: string
+          status?: string
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

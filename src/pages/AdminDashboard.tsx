@@ -9,16 +9,28 @@ import CertificateList from "../components/Certificate/CertificateList";
 import { getCertificates, revokeCertificate, deleteCertificate } from "../services/certificateService";
 import { Certificate } from "../types/Certificate";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [newCertificateId, setNewCertificateId] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isAuthenticated) {
-      setCertificates(getCertificates());
+      setLoading(true);
+      getCertificates()
+        .then(data => {
+          setCertificates(data);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error("Failed to fetch certificates:", error);
+          setLoading(false);
+          toast.error("Failed to load certificates");
+        });
     }
   }, [isAuthenticated, refreshCount]);
 
@@ -26,24 +38,33 @@ const AdminDashboard: React.FC = () => {
     return <Navigate to="/login" />;
   }
 
-  const handleRevoke = (id: string) => {
+  const handleRevoke = async (id: string) => {
     if (window.confirm("Are you sure you want to revoke this certificate? This action cannot be undone.")) {
-      revokeCertificate(id);
-      setRefreshCount(prev => prev + 1);
+      try {
+        await revokeCertificate(id);
+        setRefreshCount(prev => prev + 1);
+      } catch (error) {
+        console.error("Failed to revoke certificate:", error);
+        toast.error("Failed to revoke certificate");
+      }
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this certificate? This action cannot be undone.")) {
-      deleteCertificate(id);
-      setRefreshCount(prev => prev + 1);
+      try {
+        await deleteCertificate(id);
+        setRefreshCount(prev => prev + 1);
+      } catch (error) {
+        console.error("Failed to delete certificate:", error);
+        toast.error("Failed to delete certificate");
+      }
     }
   };
 
   const handleCreateSuccess = (certificationId: string) => {
     setRefreshCount(prev => prev + 1);
     setNewCertificateId(certificationId);
-    toast.success("Certificate created successfully");
   };
 
   return (
@@ -79,11 +100,29 @@ const AdminDashboard: React.FC = () => {
               </div>
             )}
             
-            <CertificateList 
-              certificates={certificates}
-              onRevoke={handleRevoke}
-              onDelete={handleDelete}
-            />
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="border rounded-lg p-4">
+                    <Skeleton className="h-8 w-3/4 mb-4" />
+                    <Skeleton className="h-4 w-1/2 mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-2" />
+                    <Skeleton className="h-4 w-2/3 mb-2" />
+                    <div className="flex justify-end mt-4 gap-2">
+                      <Skeleton className="h-9 w-24" />
+                      <Skeleton className="h-9 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <CertificateList 
+                certificates={certificates}
+                onRevoke={handleRevoke}
+                onDelete={handleDelete}
+              />
+            )}
           </div>
         </TabsContent>
         
