@@ -15,6 +15,7 @@ export type Database = {
           description: string | null
           id: string
           is_system: boolean
+          markupgo_template_id: string | null
           name: string
           styles: Json
           updated_at: string
@@ -25,6 +26,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_system?: boolean
+          markupgo_template_id?: string | null
           name: string
           styles: Json
           updated_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_system?: boolean
+          markupgo_template_id?: string | null
           name?: string
           styles?: Json
           updated_at?: string
@@ -46,6 +49,7 @@ export type Database = {
         Row: {
           certification_id: string
           created_at: string
+          custom_data: Json | null
           custom_styles: Json | null
           description: string | null
           expiry_date: string | null
@@ -53,6 +57,7 @@ export type Database = {
           issue_date: string
           issuer_name: string
           metadata: Json | null
+          public_pdf_url: string | null
           recipient_name: string
           status: string
           template_id: string | null
@@ -63,6 +68,7 @@ export type Database = {
         Insert: {
           certification_id: string
           created_at?: string
+          custom_data?: Json | null
           custom_styles?: Json | null
           description?: string | null
           expiry_date?: string | null
@@ -70,6 +76,7 @@ export type Database = {
           issue_date: string
           issuer_name: string
           metadata?: Json | null
+          public_pdf_url?: string | null
           recipient_name: string
           status?: string
           template_id?: string | null
@@ -80,6 +87,7 @@ export type Database = {
         Update: {
           certification_id?: string
           created_at?: string
+          custom_data?: Json | null
           custom_styles?: Json | null
           description?: string | null
           expiry_date?: string | null
@@ -87,6 +95,7 @@ export type Database = {
           issue_date?: string
           issuer_name?: string
           metadata?: Json | null
+          public_pdf_url?: string | null
           recipient_name?: string
           status?: string
           template_id?: string | null

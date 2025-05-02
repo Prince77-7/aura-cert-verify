@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout/Layout";
 import SettingsPage from "./components/Settings/SettingsPage";
+
+// Import and initialize both Supabase clients to ensure we have a working one
+import "./lib/supabaseClient";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";

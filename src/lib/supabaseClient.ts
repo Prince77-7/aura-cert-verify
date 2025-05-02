@@ -1,20 +1,15 @@
+
 // src/lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js'
 
-// Read the environment variables using Vite's import.meta.env
-// Variables must be prefixed with VITE_ in your .env file
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Read the environment variables or use the hardcoded values from integrations/supabase/client.ts
+// This ensures we have a fallback if environment variables aren't available
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://bubetfgnlzedywxlkoec.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1YmV0ZmdubHplZHl3eGxrb2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMzAxNDMsImV4cCI6MjA2MTYwNjE0M30.BNqcEX_vNx6jz61JlB-aPaZ_THN5IgIdnFX4qHJFQ1A";
 
-// Check if the variables were loaded correctly
+// Check if we have at least the URL (we added fallbacks, so this should always pass now)
 if (!supabaseUrl) {
-  console.error("CRITICAL ERROR: VITE_SUPABASE_URL is not defined. Check your .env.local file (ensure prefix is VITE_) and restart the dev server.");
-  throw new Error("Missing Supabase URL configuration.");
-}
-
-if (!supabaseAnonKey) {
-  console.error("CRITICAL ERROR: VITE_SUPABASE_ANON_KEY is not defined. Check your .env.local file (ensure prefix is VITE_) and restart the dev server.");
-  throw new Error("Missing Supabase Anon Key configuration.");
+  console.error("CRITICAL ERROR: Supabase URL is not defined. Using fallback values.");
 }
 
 // Create and export the Supabase client instance

@@ -1,3 +1,4 @@
+
 export interface CertificateTemplate {
   id: string;
   name: string;

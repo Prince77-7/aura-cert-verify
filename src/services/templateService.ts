@@ -7,20 +7,84 @@ const mapToTemplate = (dbTemplate: any): CertificateTemplate => {
   // Basic validation: Ensure dbTemplate is an object and has an id
   if (!dbTemplate || typeof dbTemplate !== 'object' || !dbTemplate.id) {
     console.error("Invalid dbTemplate received in mapToTemplate:", dbTemplate);
-    // Return a default/empty structure or throw an error
-    // Returning an empty structure might hide errors, throwing might be better depending on desired behavior.
-    // For now, let's throw to make the issue visible during development.
     throw new Error("Invalid template data received from database.");
   }
+
+  // Ensure position is one of the allowed values
+  const logoPosition = dbTemplate.styles?.logoStyles?.position;
+  const validLogoPosition = logoPosition && ["top", "bottom", "left", "right"].includes(logoPosition) 
+    ? logoPosition as "top" | "bottom" | "left" | "right"
+    : "top";
 
   return {
     id: dbTemplate.id,
     name: dbTemplate.name,
     description: dbTemplate.description || "",
-    markupgo_template_id: dbTemplate.markupgo_template_id || "", // Map the new field, provide default
+    markupgo_template_id: dbTemplate.markupgo_template_id || "", 
     createdAt: dbTemplate.created_at,
     updatedAt: dbTemplate.updated_at,
-    styles: dbTemplate.styles
+    styles: {
+      backgroundColor: dbTemplate.styles?.backgroundColor || "#ffffff",
+      backgroundImage: dbTemplate.styles?.backgroundImage || "",
+      borderStyle: dbTemplate.styles?.borderStyle || "solid",
+      borderColor: dbTemplate.styles?.borderColor || "#000000",
+      borderWidth: dbTemplate.styles?.borderWidth || "3px",
+      width: dbTemplate.styles?.width || "800px",
+      height: dbTemplate.styles?.height || "600px",
+      fontFamily: dbTemplate.styles?.fontFamily || "Georgia, serif",
+      titleStyles: {
+        fontSize: dbTemplate.styles?.titleStyles?.fontSize || "32px",
+        fontWeight: dbTemplate.styles?.titleStyles?.fontWeight || "bold",
+        color: dbTemplate.styles?.titleStyles?.color || "#000000",
+        textAlign: dbTemplate.styles?.titleStyles?.textAlign || "center",
+        marginTop: dbTemplate.styles?.titleStyles?.marginTop || "80px",
+        marginBottom: dbTemplate.styles?.titleStyles?.marginBottom || "20px"
+      },
+      recipientStyles: {
+        fontSize: dbTemplate.styles?.recipientStyles?.fontSize || "28px",
+        fontWeight: dbTemplate.styles?.recipientStyles?.fontWeight || "normal",
+        color: dbTemplate.styles?.recipientStyles?.color || "#000000",
+        textAlign: dbTemplate.styles?.recipientStyles?.textAlign || "center",
+        marginTop: dbTemplate.styles?.recipientStyles?.marginTop || "40px",
+        marginBottom: dbTemplate.styles?.recipientStyles?.marginBottom || "10px"
+      },
+      issuerStyles: {
+        fontSize: dbTemplate.styles?.issuerStyles?.fontSize || "18px",
+        fontWeight: dbTemplate.styles?.issuerStyles?.fontWeight || "normal",
+        color: dbTemplate.styles?.issuerStyles?.color || "#000000",
+        textAlign: dbTemplate.styles?.issuerStyles?.textAlign || "center",
+        marginTop: dbTemplate.styles?.issuerStyles?.marginTop || "60px",
+        marginBottom: dbTemplate.styles?.issuerStyles?.marginBottom || "10px"
+      },
+      dateStyles: {
+        fontSize: dbTemplate.styles?.dateStyles?.fontSize || "16px",
+        fontWeight: dbTemplate.styles?.dateStyles?.fontWeight || "normal",
+        color: dbTemplate.styles?.dateStyles?.color || "#000000",
+        textAlign: dbTemplate.styles?.dateStyles?.textAlign || "center",
+        marginTop: dbTemplate.styles?.dateStyles?.marginTop || "20px",
+        marginBottom: dbTemplate.styles?.dateStyles?.marginBottom || "20px"
+      },
+      descriptionStyles: {
+        fontSize: dbTemplate.styles?.descriptionStyles?.fontSize || "16px",
+        fontWeight: dbTemplate.styles?.descriptionStyles?.fontWeight || "normal",
+        color: dbTemplate.styles?.descriptionStyles?.color || "#000000",
+        textAlign: dbTemplate.styles?.descriptionStyles?.textAlign || "center",
+        marginTop: dbTemplate.styles?.descriptionStyles?.marginTop || "20px",
+        marginBottom: dbTemplate.styles?.descriptionStyles?.marginBottom || "20px"
+      },
+      logoStyles: {
+        width: dbTemplate.styles?.logoStyles?.width || "120px",
+        height: dbTemplate.styles?.logoStyles?.height || "120px",
+        position: validLogoPosition,
+        margin: dbTemplate.styles?.logoStyles?.margin || "20px auto"
+      },
+      signatureStyles: {
+        width: dbTemplate.styles?.signatureStyles?.width || "200px",
+        height: dbTemplate.styles?.signatureStyles?.height || "80px",
+        position: "bottom",
+        margin: dbTemplate.styles?.signatureStyles?.margin || "20px auto"
+      }
+    }
   };
 };
 

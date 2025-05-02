@@ -1,5 +1,4 @@
-
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "../lib/supabaseClient";
 import { Certificate } from "../types/Certificate";
 import { v4 as uuidv4 } from "uuid";
 

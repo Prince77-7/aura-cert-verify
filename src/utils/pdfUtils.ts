@@ -1,72 +1,66 @@
 
-import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import { Certificate } from "@/types/Certificate";
 
-interface PDFOptions {
-  quality?: number;
-  filename?: string;
-  scale?: number;
-  format?: string;
-}
-
-export const generatePDF = async (
-  element: HTMLElement, 
-  fileName: string = "certificate", 
-  options: PDFOptions = {}
-): Promise<void> => {
+// Helper function to generate a PDF from the certificate
+export const generateCertificatePDF = async (
+  certificateElement: HTMLElement,
+  certificate: Certificate
+): Promise<Blob> => {
   try {
-    toast.info("Preparing PDF...");
+    console.log("Starting PDF generation for certificate:", certificate.id);
     
-    // Use higher scale for better quality (default to 4x for better resolution)
-    const scale = options.scale || 4; 
-    
-    // Get element dimensions for proper scaling
-    const { width, height } = element.getBoundingClientRect();
-    
-    const canvas = await html2canvas(element, {
-      scale: scale,
+    // Use a higher scale factor (4) for better quality
+    const canvas = await html2canvas(certificateElement, {
+      scale: 4, // Increased for higher resolution
       useCORS: true,
-      logging: false,
       allowTaint: true,
-      backgroundColor: null,
-      // Improve text rendering
-      letterRendering: true,
-      // Better quality settings
-      imageTimeout: 0,
-      // Use devicePixelRatio for better quality on high-DPI displays
-      windowWidth: width * scale,
-      windowHeight: height * scale,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: document.documentElement.offsetWidth,
+      windowHeight: document.documentElement.offsetHeight,
+      // Remove letterRendering which is causing the TS error
     });
 
-    const imgData = canvas.toDataURL("image/png", 1.0); // Use maximum quality for PNG
+    const imgData = canvas.toDataURL("image/png");
     
-    // Create PDF with proper aspect ratio
-    const pdfWidth = 210; // A4 width in mm
-    const pdfHeight = (height * pdfWidth) / width;
+    // Calculate PDF dimensions based on canvas
+    const imgWidth = 210; // A4 width in mm (portrait)
+    const imgHeight = canvas.height * imgWidth / canvas.width;
     
-    const pdf = new jsPDF({
-      orientation: width > height ? "landscape" : "portrait",
-      unit: "mm",
-      format: options.format || "a4",
-    });
-
-    // Calculate dimensions to center and fit content properly
-    const docWidth = pdf.internal.pageSize.getWidth();
-    const docHeight = pdf.internal.pageSize.getHeight();
+    const pdf = new jsPDF("p", "mm", "a4");
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
     
-    // Center the image on the page
-    const x = (docWidth - pdfWidth) / 2;
-    const y = (docHeight - pdfHeight) / 2;
+    console.log("PDF generation completed successfully");
     
-    // Add the image to the PDF with proper dimensions
-    pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
-    
-    pdf.save(`${fileName}.pdf`);
-    
-    toast.success("PDF downloaded successfully");
+    return pdf.output("blob");
   } catch (error) {
     console.error("Error generating PDF:", error);
-    toast.error("Failed to generate PDF");
+    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);
+  }
+};
+
+// Helper function to download the generated PDF
+export const downloadCertificatePDF = async (
+  certificateElement: HTMLElement,
+  certificate: Certificate
+): Promise<void> => {
+  try {
+    const pdfBlob = await generateCertificatePDF(certificateElement, certificate);
+    const fileName = `${certificate.recipientName.replace(/\s+/g, "_")}_Certificate.pdf`;
+    
+    // Create a download link and trigger the download
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(pdfBlob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log("Certificate downloaded successfully");
+  } catch (error) {
+    console.error("Error downloading certificate:", error);
+    throw error;
   }
 };
