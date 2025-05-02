@@ -49,7 +49,7 @@ export const getCertificates = async (): Promise<Certificate[]> => {
   } catch (error) {
     console.error("Error fetching certificates:", error);
     // Fallback to local storage
-    return JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    return JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
   }
 };
 
@@ -67,7 +67,7 @@ export const getCertificateById = async (id: string): Promise<Certificate | null
   } catch (error) {
     console.error("Error fetching certificate:", error);
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     return certificates.find((cert: Certificate) => cert.id === id) || null;
   }
 };
@@ -87,7 +87,7 @@ export const getCertificateByVerificationId = async (verificationId: string): Pr
   } catch (error) {
     console.error("Error fetching certificate by verification ID:", error);
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     return certificates.find((cert: Certificate) => cert.certificationId === verificationId && cert.status === "active") || null;
   }
 };
@@ -128,7 +128,7 @@ export const createCertificate = async (certificateData: Omit<Certificate, "id" 
     console.error("Error creating certificate:", error);
     
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     const localNewCertificate = {
       id: uuidv4(),
       recipientName: certificateData.recipientName,
@@ -146,7 +146,7 @@ export const createCertificate = async (certificateData: Omit<Certificate, "id" 
     };
     
     certificates.push(localNewCertificate);
-    localStorage.setItem("aura_certificates", JSON.stringify(certificates));
+    localStorage.setItem("shield_of_steel_certificates", JSON.stringify(certificates));
     return localNewCertificate;
   }
 };
@@ -164,7 +164,7 @@ export const revokeCertificate = async (id: string): Promise<void> => {
     console.error("Error revoking certificate:", error);
     
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     const updatedCertificates = certificates.map((cert: Certificate) => {
       if (cert.id === id) {
         return { ...cert, status: "revoked" };
@@ -172,7 +172,7 @@ export const revokeCertificate = async (id: string): Promise<void> => {
       return cert;
     });
     
-    localStorage.setItem("aura_certificates", JSON.stringify(updatedCertificates));
+    localStorage.setItem("shield_of_steel_certificates", JSON.stringify(updatedCertificates));
   }
 };
 
@@ -189,10 +189,10 @@ export const deleteCertificate = async (id: string): Promise<void> => {
     console.error("Error deleting certificate:", error);
     
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     const filteredCertificates = certificates.filter((cert: Certificate) => cert.id !== id);
     
-    localStorage.setItem("aura_certificates", JSON.stringify(filteredCertificates));
+    localStorage.setItem("shield_of_steel_certificates", JSON.stringify(filteredCertificates));
   }
 };
 
@@ -209,7 +209,7 @@ export const updateCertificateStyles = async (id: string, customStyles: Record<s
     console.error("Error updating certificate styles:", error);
     
     // Fallback to local storage
-    const certificates = JSON.parse(localStorage.getItem("aura_certificates") || "[]");
+    const certificates = JSON.parse(localStorage.getItem("shield_of_steel_certificates") || "[]");
     const updatedCertificates = certificates.map((cert: Certificate) => {
       if (cert.id === id) {
         return { ...cert, customStyles };
@@ -217,6 +217,6 @@ export const updateCertificateStyles = async (id: string, customStyles: Record<s
       return cert;
     });
     
-    localStorage.setItem("aura_certificates", JSON.stringify(updatedCertificates));
+    localStorage.setItem("shield_of_steel_certificates", JSON.stringify(updatedCertificates));
   }
 };

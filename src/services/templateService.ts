@@ -39,7 +39,7 @@ export const getTemplates = async (): Promise<CertificateTemplate[]> => {
   } catch (error) {
     console.error("Error fetching templates:", error);
     // Fallback to local storage - Note: LocalStorage data might not have the new field!
-    const localData = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const localData = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     // Attempt to map local data too, handling potential missing fields
     return Array.isArray(localData) ? localData.map(item => ({ ...mapToTemplate({}), ...item })) : []; // Provide defaults
   }
@@ -62,7 +62,7 @@ export const getDefaultTemplate = async (): Promise<CertificateTemplate> => {
     console.error("Error fetching default template:", error);
     
     // Fallback to local storage or create a default
-    const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const templates = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     if (templates.length > 0) {
       return templates[0];
     }
@@ -139,7 +139,7 @@ export const getDefaultTemplate = async (): Promise<CertificateTemplate> => {
       }
     };
     
-    localStorage.setItem("aura_certificate_templates", JSON.stringify([defaultTemplate]));
+    localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify([defaultTemplate]));
     return defaultTemplate;
   }
 };
@@ -160,7 +160,7 @@ export const getTemplateById = async (id: string): Promise<CertificateTemplate |
     console.error("Error fetching template by ID:", error);
     
     // Fallback to local storage
-    const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const templates = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     return templates.find((t: CertificateTemplate) => t.id === id) || null;
   }
 };
@@ -187,7 +187,7 @@ export const createTemplate = async (template: Omit<CertificateTemplate, "id" | 
     console.error("Error creating template:", error);
     
     // Fallback to local storage
-    const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const templates = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     const localNewTemplate: CertificateTemplate = { // Ensure type safety
       id: uuidv4(),
       name: template.name,
@@ -199,7 +199,7 @@ export const createTemplate = async (template: Omit<CertificateTemplate, "id" | 
     };
     
     templates.push(localNewTemplate);
-    localStorage.setItem("aura_certificate_templates", JSON.stringify(templates));
+    localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(templates));
     return localNewTemplate;
   }
 };
@@ -228,7 +228,7 @@ export const updateTemplate = async (id: string, template: Omit<CertificateTempl
     console.error("Error updating template:", error);
     
     // Fallback to local storage
-    const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const templates = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     const updatedTemplates = templates.map((t: CertificateTemplate) => {
       if (t.id === id) {
         return { 
@@ -243,7 +243,7 @@ export const updateTemplate = async (id: string, template: Omit<CertificateTempl
       return t;
     });
     
-    localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
+    localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(updatedTemplates));
     return updatedTemplates.find((t: CertificateTemplate) => t.id === id)!;
   }
 };
@@ -261,8 +261,8 @@ export const deleteTemplate = async (id: string): Promise<void> => {
     console.error("Error deleting template:", error);
     
     // Fallback to local storage
-    const templates = JSON.parse(localStorage.getItem("aura_certificate_templates") || "[]");
+    const templates = JSON.parse(localStorage.getItem("shield_of_steel_certificate_templates") || "[]");
     const filteredTemplates = templates.filter((t: CertificateTemplate) => t.id !== id);
-    localStorage.setItem("aura_certificate_templates", JSON.stringify(filteredTemplates));
+    localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(filteredTemplates));
   }
 };

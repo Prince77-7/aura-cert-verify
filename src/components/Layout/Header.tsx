@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "../ui/button";
-import { LogOut, Lock, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 
 export const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -13,8 +13,8 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <Lock className="h-6 w-6" />
-          <span className="font-semibold text-xl">AuraCert</span>
+          <img src="/logo.svg" alt="Shield of Steel Logo" className="h-8 w-auto dark:invert-0 invert" />
+          <span className="font-medium text-lg">Training Division</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
@@ -58,7 +58,7 @@ export const Header: React.FC = () => {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -68,19 +68,6 @@ export const Header: React.FC = () => {
               <LogOut className="h-4 w-4" />
               <span className="hidden md:inline">Logout</span>
             </Button>
-          ) : (
-            location.pathname !== "/login" && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-              >
-                <Link to="/login" className="gap-1">
-                  <Lock className="h-4 w-4" />
-                  <span>Admin Login</span>
-                </Link>
-              </Button>
-            )
           )}
         </div>
       </div>

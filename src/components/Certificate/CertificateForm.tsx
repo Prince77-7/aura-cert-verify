@@ -319,7 +319,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
         const updatedTemplates = templates.map(t => 
           t.id === updatedTemplate.id ? updatedTemplate : t
         );
-        localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
+        localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(updatedTemplates));
         setTemplates(updatedTemplates);
         setSelectedTemplate(updatedTemplate);
         setEditingTemplate(null);
@@ -329,7 +329,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
           id: `template-${Date.now()}`,
         };
         const updatedTemplates = [...templates, newTemplate];
-        localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
+        localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(updatedTemplates));
         setTemplates(updatedTemplates);
         setSelectedTemplate(newTemplate);
       }
@@ -348,7 +348,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
     
     if (window.confirm("Are you sure you want to delete this template?")) {
       const updatedTemplates = templates.filter(t => t.id !== id);
-      localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
+      localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(updatedTemplates));
       setTemplates(updatedTemplates);
       
       if (selectedTemplate?.id === id) {
@@ -375,7 +375,7 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
     };
     
     const updatedTemplates = [...templates, clonedTemplate];
-    localStorage.setItem("aura_certificate_templates", JSON.stringify(updatedTemplates));
+    localStorage.setItem("shield_of_steel_certificate_templates", JSON.stringify(updatedTemplates));
     setTemplates(updatedTemplates);
     setSelectedTemplate(clonedTemplate);
     

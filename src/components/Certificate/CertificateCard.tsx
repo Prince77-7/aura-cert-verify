@@ -13,6 +13,7 @@ import { toast } from "sonner";
 interface CertificateCardProps {
   certificate: Certificate;
   showActions?: boolean;
+  showTemplate?: boolean;
   onRevoke?: (id: string) => void;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -21,6 +22,7 @@ interface CertificateCardProps {
 export const CertificateCard: React.FC<CertificateCardProps> = ({
   certificate,
   showActions = false,
+  showTemplate = false,
   onRevoke,
   onDelete,
   onEdit,
@@ -110,10 +112,12 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
           </div>
         )}
         
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Template</p>
-          <p className="text-sm">{templateName}</p>
-        </div>
+        {showTemplate && (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Template</p>
+            <p className="text-sm">{templateName}</p>
+          </div>
+        )}
 
         <div>
           <p className="text-sm font-medium text-muted-foreground">Verification ID</p>
