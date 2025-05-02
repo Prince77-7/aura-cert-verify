@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SketchPicker } from 'react-color';
 import { useCertificate } from '../../context/CertificateContext';
@@ -7,13 +8,14 @@ import { Label } from '../ui/label';
 import { Slider } from '../ui/slider';
 import { Switch } from '../ui/switch';
 import { Separator } from '../ui/separator';
+import ColorPicker from './ColorPicker';
 
 interface ElementPropertiesPanelProps {
-  selectedElement: Element | null;
-  onUpdateElement: (updatedElement: Element) => void;
+  selectedElement?: Element | null;
+  onUpdateElement?: (updatedElement: Element) => void;
 }
 
-const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selectedElement, onUpdateElement }) => {
+const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selectedElement, onUpdateElement = () => {} }) => {
   const { updateElement } = useCertificate();
   const [name, setName] = useState(selectedElement?.name || '');
   const [x, setX] = useState(selectedElement?.x || 0);
@@ -178,11 +180,11 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
 
           <div>
             <Label>Color</Label>
-            <SketchPicker
+            <ColorPicker
               color={color}
-              onChangeComplete={(c) => {
-                setColor(c.hex);
-                updateProperty('color', c.hex);
+              onChange={(newColor) => {
+                setColor(newColor);
+                updateProperty('color', newColor);
               }}
             />
           </div>
@@ -227,11 +229,11 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
 
       <div>
         <Label>Background Color</Label>
-        <SketchPicker
+        <ColorPicker
           color={backgroundColor}
-          onChangeComplete={(c) => {
-            setBackgroundColor(c.hex);
-            updateProperty('backgroundColor', c.hex);
+          onChange={(newColor) => {
+            setBackgroundColor(newColor);
+            updateProperty('backgroundColor', newColor);
           }}
         />
       </div>
@@ -294,11 +296,11 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
 
       <div>
         <Label>Border Color</Label>
-        <SketchPicker
+        <ColorPicker
           color={borderColor}
-          onChangeComplete={(c) => {
-            setBorderColor(c.hex);
-            updateProperty('borderColor', c.hex);
+          onChange={(newColor) => {
+            setBorderColor(newColor);
+            updateProperty('borderColor', newColor);
           }}
         />
       </div>
