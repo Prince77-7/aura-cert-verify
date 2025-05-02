@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Navigate } from 'react-router-dom';
 import { 
   saveMarkupGoApiKey, 
   getMarkupGoApiKey, 
@@ -35,13 +35,18 @@ const extractKeysFromJson = (obj: any, prefix = ''): string[] => {
 };
 
 const SettingsPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [apiKey, setApiKey] = useState<string>('');
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newFieldName, setNewFieldName] = useState<string>('');
   const [templateId, setTemplateId] = useState<string>('');
   const [jsonInput, setJsonInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Redirect unauthorized users to login
+  if (!authLoading && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   useEffect(() => {
     const loadSettings = async () => {

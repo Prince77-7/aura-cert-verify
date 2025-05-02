@@ -1,83 +1,106 @@
 
 import React, { useState, useEffect } from 'react';
 import { SketchPicker } from 'react-color';
-import { useCertificate } from '../../context/CertificateContext';
-import { Element } from '../../types/types';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Slider } from '../ui/slider';
-import { Switch } from '../ui/switch';
-import { Separator } from '../ui/separator';
-import ColorPicker from './ColorPicker';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { CertificateElement } from '@/types/CertificateElement';
 
-interface ElementPropertiesPanelProps {
-  selectedElement?: Element | null;
-  onUpdateElement?: (updatedElement: Element) => void;
+export interface ElementPropertiesPanelProps {
+  selectedElement?: CertificateElement;
+  element?: CertificateElement; // Added to support both prop naming conventions
+  onUpdateElement?: (element: CertificateElement) => void;
+  onUpdate?: (element: CertificateElement) => void; // Added to support both prop naming conventions
+  onBringToFront?: () => void;
+  onSendToBack?: () => void;
+  onDelete?: () => void;
 }
 
-const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selectedElement, onUpdateElement = () => {} }) => {
-  const { updateElement } = useCertificate();
-  const [name, setName] = useState(selectedElement?.name || '');
-  const [x, setX] = useState(selectedElement?.x || 0);
-  const [y, setY] = useState(selectedElement?.y || 0);
-  const [width, setWidth] = useState(selectedElement?.width || 100);
-  const [height, setHeight] = useState(selectedElement?.height || 50);
-  const [fontSize, setFontSize] = useState(selectedElement?.fontSize || 16);
-  const [fontFamily, setFontFamily] = useState(selectedElement?.fontFamily || 'Arial');
-  const [color, setColor] = useState(selectedElement?.color || '#000000');
-  const [bold, setBold] = useState(selectedElement?.bold || false);
-  const [italic, setItalic] = useState(selectedElement?.italic || false);
-  const [underline, setUnderline] = useState(selectedElement?.underline || false);
-  const [backgroundColor, setBackgroundColor] = useState(selectedElement?.backgroundColor || 'transparent');
-  const [opacity, setOpacity] = useState(selectedElement?.opacity || 1);
-  const [rotation, setRotation] = useState(selectedElement?.rotation || 0);
-  const [borderWidth, setBorderWidth] = useState(selectedElement?.borderWidth || 0);
-  const [borderColor, setBorderColor] = useState(selectedElement?.borderColor || '#000000');
-  const [borderRadius, setBorderRadius] = useState(selectedElement?.borderRadius || 0);
-  const [zIndex, setZIndex] = useState(selectedElement?.zIndex || 0);
-  const [hidden, setHidden] = useState(selectedElement?.hidden || false);
+const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ 
+  selectedElement, 
+  element, // Support both naming conventions
+  onUpdateElement, 
+  onUpdate, // Support both naming conventions
+  onBringToFront,
+  onSendToBack,
+  onDelete
+}) => {
+  // Use either selectedElement or element prop
+  const activeElement = selectedElement || element;
+  // Use either onUpdateElement or onUpdate callback
+  const handleUpdate = onUpdateElement || onUpdate || (() => {});
+
+  const [name, setName] = useState(activeElement?.name || '');
+  const [x, setX] = useState(activeElement?.x || 0);
+  const [y, setY] = useState(activeElement?.y || 0);
+  const [width, setWidth] = useState(activeElement?.width || 100);
+  const [height, setHeight] = useState(activeElement?.height || 50);
+  const [fontSize, setFontSize] = useState(activeElement?.fontSize || 16);
+  const [fontFamily, setFontFamily] = useState(activeElement?.fontFamily || 'Arial');
+  const [color, setColor] = useState(activeElement?.color || '#000000');
+  const [bold, setBold] = useState(activeElement?.bold || false);
+  const [italic, setItalic] = useState(activeElement?.italic || false);
+  const [underline, setUnderline] = useState(activeElement?.underline || false);
+  const [backgroundColor, setBackgroundColor] = useState(activeElement?.backgroundColor || 'transparent');
+  const [opacity, setOpacity] = useState(activeElement?.opacity || 1);
+  const [rotation, setRotation] = useState(activeElement?.rotation || 0);
+  const [borderWidth, setBorderWidth] = useState(activeElement?.borderWidth || 0);
+  const [borderColor, setBorderColor] = useState(activeElement?.borderColor || '#000000');
+  const [borderRadius, setBorderRadius] = useState(activeElement?.borderRadius || 0);
+  const [zIndex, setZIndex] = useState(activeElement?.zIndex || 0);
+  const [hidden, setHidden] = useState(activeElement?.hidden || false);
 
   useEffect(() => {
-    if (selectedElement) {
-      setName(selectedElement.name || '');
-      setX(selectedElement.x || 0);
-      setY(selectedElement.y || 0);
-      setWidth(selectedElement.width || 100);
-      setHeight(selectedElement.height || 50);
-      setFontSize(selectedElement.fontSize || 16);
-      setFontFamily(selectedElement.fontFamily || 'Arial');
-      setColor(selectedElement.color || '#000000');
-      setBold(selectedElement.bold || false);
-      setItalic(selectedElement.italic || false);
-      setUnderline(selectedElement.underline || false);
-      setBackgroundColor(selectedElement.backgroundColor || 'transparent');
-      setOpacity(selectedElement.opacity || 1);
-      setRotation(selectedElement.rotation || 0);
-      setBorderWidth(selectedElement.borderWidth || 0);
-      setBorderColor(selectedElement.borderColor || '#000000');
-      setBorderRadius(selectedElement.borderRadius || 0);
-      setZIndex(selectedElement.zIndex || 0);
-      setHidden(selectedElement.hidden || false);
+    if (activeElement) {
+      setName(activeElement.name || '');
+      setX(activeElement.x || 0);
+      setY(activeElement.y || 0);
+      setWidth(activeElement.width || 100);
+      setHeight(activeElement.height || 50);
+      setFontSize(activeElement.fontSize || 16);
+      setFontFamily(activeElement.fontFamily || 'Arial');
+      setColor(activeElement.color || '#000000');
+      setBold(activeElement.bold || false);
+      setItalic(activeElement.italic || false);
+      setUnderline(activeElement.underline || false);
+      setBackgroundColor(activeElement.backgroundColor || 'transparent');
+      setOpacity(activeElement.opacity || 1);
+      setRotation(activeElement.rotation || 0);
+      setBorderWidth(activeElement.borderWidth || 0);
+      setBorderColor(activeElement.borderColor || '#000000');
+      setBorderRadius(activeElement.borderRadius || 0);
+      setZIndex(activeElement.zIndex || 0);
+      setHidden(activeElement.hidden || false);
     }
-  }, [selectedElement]);
+  }, [activeElement]);
 
   const updateProperty = (propertyName: string, value: any) => {
-    if (!selectedElement) return;
-
-    const updatedElement = { ...selectedElement, [propertyName]: value };
-    onUpdateElement(updatedElement);
-    updateElement(updatedElement);
+    if (!activeElement) return;
+    
+    const updatedElement = {
+      ...activeElement,
+      [propertyName]: value
+    };
+    
+    handleUpdate(updatedElement);
   };
 
-  if (!selectedElement) {
-    return <div className="p-4">Select an element to view its properties.</div>;
+  if (!activeElement) {
+    return (
+      <div className="p-4">
+        Select an element to view its properties.
+      </div>
+    );
   }
 
   return (
     <div className="p-4 space-y-4">
       <h3 className="text-lg font-semibold">Element Properties</h3>
       <Separator />
-
+      
       <div>
         <Label htmlFor="name">Name</Label>
         <Input
@@ -91,6 +114,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
         />
       </div>
 
+      {/* Position controls */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="x">X Position</Label>
@@ -104,7 +128,6 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
             }}
           />
         </div>
-
         <div>
           <Label htmlFor="y">Y Position</Label>
           <Input
@@ -118,7 +141,8 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           />
         </div>
       </div>
-
+      
+      {/* Size controls */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="width">Width</Label>
@@ -132,7 +156,6 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
             }}
           />
         </div>
-
         <div>
           <Label htmlFor="height">Height</Label>
           <Input
@@ -146,12 +169,13 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           />
         </div>
       </div>
-
-      {selectedElement.type === 'text' && (
+      
+      {/* Text properties - only show if the element is a text element */}
+      {activeElement.type === 'text' && (
         <>
           <Separator />
           <h4 className="text-md font-semibold">Text Properties</h4>
-
+          
           <div>
             <Label htmlFor="fontSize">Font Size</Label>
             <Input
@@ -164,7 +188,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
               }}
             />
           </div>
-
+          
           <div>
             <Label htmlFor="fontFamily">Font Family</Label>
             <Input
@@ -177,18 +201,18 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
               }}
             />
           </div>
-
+          
           <div>
             <Label>Color</Label>
-            <ColorPicker
+            <SketchPicker
               color={color}
-              onChange={(newColor) => {
-                setColor(newColor);
-                updateProperty('color', newColor);
+              onChangeComplete={(c) => {
+                setColor(c.hex);
+                updateProperty('color', c.hex);
               }}
             />
           </div>
-
+          
           <div className="flex space-x-2">
             <Button
               variant="outline"
@@ -196,7 +220,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
                 setBold(!bold);
                 updateProperty('bold', !bold);
               }}
-              active={bold}
+              className={bold ? 'bg-primary text-primary-foreground' : ''}
             >
               Bold
             </Button>
@@ -206,7 +230,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
                 setItalic(!italic);
                 updateProperty('italic', !italic);
               }}
-              active={italic}
+              className={italic ? 'bg-primary text-primary-foreground' : ''}
             >
               Italic
             </Button>
@@ -216,28 +240,28 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
                 setUnderline(!underline);
                 updateProperty('underline', !underline);
               }}
-              active={underline}
+              className={underline ? 'bg-primary text-primary-foreground' : ''}
             >
               Underline
             </Button>
           </div>
         </>
       )}
-
+      
       <Separator />
       <h4 className="text-md font-semibold">Styling Properties</h4>
-
+      
       <div>
         <Label>Background Color</Label>
-        <ColorPicker
+        <SketchPicker
           color={backgroundColor}
-          onChange={(newColor) => {
-            setBackgroundColor(newColor);
-            updateProperty('backgroundColor', newColor);
+          onChangeComplete={(c) => {
+            setBackgroundColor(c.hex);
+            updateProperty('backgroundColor', c.hex);
           }}
         />
       </div>
-
+      
       <div>
         <Label htmlFor="opacity">Opacity</Label>
         <Slider
@@ -252,7 +276,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           }}
         />
       </div>
-
+      
       <div>
         <Label htmlFor="rotation">Rotation</Label>
         <Input
@@ -265,7 +289,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           }}
         />
       </div>
-
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="borderWidth">Border Width</Label>
@@ -279,7 +303,6 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
             }}
           />
         </div>
-
         <div>
           <Label htmlFor="borderRadius">Border Radius</Label>
           <Input
@@ -293,18 +316,18 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           />
         </div>
       </div>
-
+      
       <div>
         <Label>Border Color</Label>
-        <ColorPicker
+        <SketchPicker
           color={borderColor}
-          onChange={(newColor) => {
-            setBorderColor(newColor);
-            updateProperty('borderColor', newColor);
+          onChangeComplete={(c) => {
+            setBorderColor(c.hex);
+            updateProperty('borderColor', c.hex);
           }}
         />
       </div>
-
+      
       <div>
         <Label htmlFor="zIndex">Z Index</Label>
         <Input
@@ -317,7 +340,7 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           }}
         />
       </div>
-
+      
       <div className="flex items-center space-x-2">
         <Label htmlFor="hidden">Hidden</Label>
         <Switch
@@ -329,32 +352,22 @@ const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selecte
           }}
         />
       </div>
+
+      {/* Layer control buttons */}
+      {onBringToFront && onSendToBack && onDelete && (
+        <div className="flex space-x-2 pt-4 border-t">
+          <Button variant="outline" onClick={onBringToFront}>
+            Bring to Front
+          </Button>
+          <Button variant="outline" onClick={onSendToBack}>
+            Send to Back
+          </Button>
+          <Button variant="destructive" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
+      )}
     </div>
-  );
-};
-
-interface ButtonProps {
-  variant: 'outline' | 'default';
-  onClick: () => void;
-  active?: boolean;
-  children: React.ReactNode;
-}
-
-const Button: React.FC<ButtonProps> = ({ variant, onClick, active, children }) => {
-  const className = `
-    inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-    ${variant === 'outline'
-      ? 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground'
-      : 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-    }
-    ${active ? 'ring-2 ring-primary' : ''}
-    px-4 py-2
-  `;
-
-  return (
-    <button className={className} onClick={onClick}>
-      {children}
-    </button>
   );
 };
 
