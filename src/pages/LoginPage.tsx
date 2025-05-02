@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { useAuth } from "../context/AuthContext";
-import { LockIcon, UserIcon } from "lucide-react";
+import { LockIcon, UserIcon, LoaderCircleIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const LoginPage: React.FC = () => {
@@ -43,10 +43,12 @@ const LoginPage: React.FC = () => {
     setIsLoading(false);
   };
 
+  // Show a loading indicator with better feedback
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
-        <p>Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-16rem)]">
+        <LoaderCircleIcon className="h-12 w-12 animate-spin mb-4 text-primary" />
+        <p className="text-muted-foreground">Checking authentication status...</p>
       </div>
     );
   }
@@ -102,7 +104,12 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? (
+                    <>
+                      <LoaderCircleIcon className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
@@ -141,7 +148,12 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating Account..." : "Create Account"}
+                  {isLoading ? (
+                    <>
+                      <LoaderCircleIcon className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : "Create Account"}
                 </Button>
               </form>
             </TabsContent>

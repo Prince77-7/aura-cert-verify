@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Set up auth state listener - must be set up first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsAuthenticated(!!currentSession?.user);
@@ -37,10 +37,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           toast.success("Logged in successfully");
           
           // If the user just signed in, sync their local settings to Supabase
-          try {
-            await syncLocalSettingsToSupabase();
-          } catch (error) {
-            console.error("Error syncing settings:", error);
+          // Use setTimeout to avoid calling Supabase inside the callback
+          if (currentSession?.user) {
+            setTimeout(async () => {
+              try {
+                await syncLocalSettingsToSupabase();
+              } catch (error) {
+                console.error("Error syncing settings:", error);
+              }
+            }, 0);
           }
         } else if (event === 'SIGNED_OUT') {
           toast.info("Logged out");
@@ -49,12 +54,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 
     // Get initial session - must be done after setting up the listener
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setIsAuthenticated(!!initialSession?.user);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        setIsAuthenticated(!!initialSession?.user);
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Clean up subscription when component unmounts
     return () => {
