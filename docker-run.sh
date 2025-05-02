@@ -4,4 +4,4 @@
 # Build and run the Docker container
 docker-compose up --build -d
 
-echo "Application is running at http://localhost:8080"
+echo "Application is running at http://localhost:2225"
