@@ -1,4 +1,3 @@
-
 export interface Element {
   id: string;
   type: string;
@@ -40,4 +39,11 @@ export type ElementType =
 // This ensures the CertificateElement type includes all the fields defined in Element
 export interface CertificateElement extends Element {
   // Add any additional certificate-specific element properties here
+  // We're keeping this interface to maintain backward compatibility
+}
+
+// Use this interface to adapt between the two CertificateElement types
+export interface CertificateElementAdapter {
+  fromNewFormat(element: import('./CertificateElement').CertificateElement): CertificateElement;
+  toNewFormat(element: CertificateElement): import('./CertificateElement').CertificateElement;
 }

@@ -1,53 +1,20 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Trash2, 
-  Image, 
-  Type, 
-  Signature, 
-  Move, 
-  Text, 
-  Square, 
-  LayoutTemplate,
-  Plus,
-  Upload,
-  Download,
-  Layers
-} from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  CertificateElement, 
-  ElementType, 
-  AdvancedCertificateTemplate 
-} from '@/types/CertificateElement';
-import { CertificateTemplate } from '@/types/CertificateTemplate';
+import { CertificateElement, ElementType } from '@/types/CertificateElement';
 import { Certificate } from '@/types/Certificate';
-import ColorPicker from './ColorPicker';
-import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue, 
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from "@/components/ui/dropdown-menu";
-import {
-  Slider
-} from "@/components/ui/slider";
+import { CertificateTemplate } from '@/types/CertificateTemplate';
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ElementPropertiesPanel from './ElementPropertiesPanel';
 import { updateCertificateStyles } from '@/services/certificateService';
+
+// Import refactored components
+import ElementList from './Editor/ElementList';
+import CanvasControls from './Editor/CanvasControls';
+import GradientEditor from './Editor/GradientEditor';
+import CertificateCanvas from './Editor/CertificateCanvas';
+import ElementPropertiesWrapper from './Editor/ElementPropertiesWrapper';
 
 const DEFAULT_CANVAS_WIDTH = 800;
 const DEFAULT_CANVAS_HEIGHT = 600;
@@ -242,7 +209,7 @@ const AdvancedCertificateEditor: React.FC<AdvancedCertificateEditorProps> = ({
       ];
       setElements(defaultElements);
     }
-  }, [certificate.id]); // Only run once when certificate changes
+  }, [certificate.id]);
 
   // Update zoom scale
   useEffect(() => {
@@ -596,21 +563,6 @@ const AdvancedCertificateEditor: React.FC<AdvancedCertificateEditorProps> = ({
     setIsUnsaved(true);
   };
 
-  const canvasStyle: React.CSSProperties = {
-    width: `${canvasWidth}px`,
-    height: `${canvasHeight}px`,
-    backgroundColor: backgroundGradient ? 'transparent' : backgroundColor,
-    backgroundImage: backgroundGradient || 'none',
-    borderStyle: borderStyle,
-    borderColor: borderColor,
-    borderWidth: borderWidth,
-    position: 'relative',
-    transform: `scale(${scale})`,
-    transformOrigin: 'top left',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.2s ease'
-  };
-
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="w-full lg:w-3/4 overflow-hidden flex flex-col gap-4">
@@ -649,49 +601,28 @@ const AdvancedCertificateEditor: React.FC<AdvancedCertificateEditorProps> = ({
           className="bg-muted rounded-md p-4 overflow-auto relative flex justify-center"
           style={{ height: '70vh' }}
         >
-          <div 
-            ref={canvasRef}
-            style={canvasStyle}
+          <CertificateCanvas 
+            canvasRef={canvasRef}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            scale={scale}
+            backgroundColor={backgroundColor}
+            backgroundGradient={backgroundGradient}
+            borderStyle={borderStyle}
+            borderColor={borderColor}
+            borderWidth={borderWidth}
+            elements={elements}
+            selectedElement={selectedElement}
+            isDragging={isDragging}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
             onClick={handleCanvasClick}
-            className="canvas-editor"
-          >
-            {elements.map((element) => (
-              <div
-                key={element.id}
-                style={{
-                  position: 'absolute',
-                  left: `${element.position.x}px`,
-                  top: `${element.position.y}px`,
-                  width: `${element.position.width}px`,
-                  height: `${element.position.height}px`,
-                  zIndex: element.position.zIndex,
-                  cursor: isDragging && selectedElement?.id === element.id ? 'grabbing' : 'pointer',
-                  border: selectedElement?.id === element.id ? '2px solid #3b82f6' : 'none',
-                  padding: '2px',
-                  ...element.style,
-                  backgroundImage: element.type === 'image' && element.style.backgroundImage 
-                    ? element.style.backgroundImage 
-                    : 'none',
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleElementSelect(element);
-                }}
-                onMouseDown={(e) => handleElementDragStart(e, element)}
-              >
-                {element.type !== 'image' && element.content}
-                
-                {selectedElement?.id === element.id && (
-                  <div className="resize-handles">
-                    {/* Resize handles would go here */}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+            onElementClick={(e, element) => {
+              e.stopPropagation();
+              handleElementSelect(element);
+            }}
+            onElementMouseDown={handleElementDragStart}
+          />
         </div>
       </div>
 
@@ -705,305 +636,62 @@ const AdvancedCertificateEditor: React.FC<AdvancedCertificateEditorProps> = ({
           </TabsList>
           
           <TabsContent value="canvas" className="p-2 border rounded-md">
-            <h3 className="text-sm font-medium mb-2">Canvas Properties</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs block mb-1">Dimensions</label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="number" 
-                    placeholder="Width" 
-                    value={canvasWidth} 
-                    onChange={(e) => setCanvasWidth(parseInt(e.target.value) || DEFAULT_CANVAS_WIDTH)}
-                    className="w-1/2"
-                  />
-                  <Input 
-                    type="number" 
-                    placeholder="Height" 
-                    value={canvasHeight}
-                    onChange={(e) => setCanvasHeight(parseInt(e.target.value) || DEFAULT_CANVAS_HEIGHT)}
-                    className="w-1/2"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-xs block mb-1">Background</label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <ColorPicker
-                      color={backgroundColor}
-                      onChange={setBackgroundColor}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowGradientPicker(true)}
-                    >
-                      Gradient
-                    </Button>
-                  </div>
-                  {backgroundGradient && (
-                    <div 
-                      className="h-8 rounded border"
-                      style={{ backgroundImage: backgroundGradient }}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 float-right"
-                        onClick={() => setBackgroundGradient("")}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-xs block mb-1">Border</label>
-                <div className="space-y-2">
-                  <Select
-                    value={borderStyle}
-                    onValueChange={setBorderStyle}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select border style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="solid">Solid</SelectItem>
-                      <SelectItem value="dashed">Dashed</SelectItem>
-                      <SelectItem value="dotted">Dotted</SelectItem>
-                      <SelectItem value="double">Double</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  {borderStyle !== 'none' && (
-                    <>
-                      <div className="flex gap-2">
-                        <ColorPicker
-                          color={borderColor}
-                          onChange={setBorderColor}
-                          className="flex-1"
-                        />
-                        <div className="w-20">
-                          <Input
-                            type="text"
-                            placeholder="Width"
-                            value={borderWidth}
-                            onChange={(e) => setBorderWidth(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CanvasControls 
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
+              backgroundColor={backgroundColor}
+              backgroundGradient={backgroundGradient}
+              borderStyle={borderStyle}
+              borderColor={borderColor}
+              borderWidth={borderWidth}
+              onWidthChange={setCanvasWidth}
+              onHeightChange={setCanvasHeight}
+              onBackgroundColorChange={setBackgroundColor}
+              onBorderStyleChange={setBorderStyle}
+              onBorderColorChange={setBorderColor}
+              onBorderWidthChange={setBorderWidth}
+              onShowGradientPicker={() => setShowGradientPicker(true)}
+              onClearGradient={() => setBackgroundGradient("")}
+            />
           </TabsContent>
           
           <TabsContent value="elements" className="p-2 border rounded-md">
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium mb-2">Add Elements</h3>
-              
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleAddElement('text')}>
-                  <Text className="h-4 w-4 mr-1" />
-                  Text
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleAddElement('image')}>
-                  <Image className="h-4 w-4 mr-1" />
-                  Image
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleAddElement('signature')}>
-                  <Signature className="h-4 w-4 mr-1" />
-                  Sign
-                </Button>
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-1" />
-                    More Elements
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleAddElement('title')}>Certificate Title</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('recipient')}>Recipient Name</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('issuer')}>Issuer Name</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('date')}>Date</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('description')}>Description</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('badge')}>Badge</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddElement('verification')}>Verification ID</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <div className="border-t pt-2">
-                <h3 className="text-sm font-medium mb-2">Element List</h3>
-                <div className="space-y-1 max-h-64 overflow-y-auto">
-                  {elements.map((element) => (
-                    <div 
-                      key={element.id}
-                      className={`flex items-center justify-between p-1 rounded text-sm ${selectedElement?.id === element.id ? 'bg-muted' : ''}`}
-                      onClick={() => handleElementSelect(element)}
-                    >
-                      <div className="flex items-center gap-1 overflow-hidden">
-                        {element.type === 'text' && <Text className="h-3 w-3" />}
-                        {element.type === 'image' && <Image className="h-3 w-3" />}
-                        {element.type === 'signature' && <Signature className="h-3 w-3" />}
-                        {element.type === 'title' && <Type className="h-3 w-3" />}
-                        {element.type === 'recipient' && <Square className="h-3 w-3" />}
-                        {element.type === 'issuer' && <Square className="h-3 w-3" />}
-                        {element.type === 'date' && <Square className="h-3 w-3" />}
-                        {element.type === 'description' && <Text className="h-3 w-3" />}
-                        {element.type === 'badge' && <Square className="h-3 w-3" />}
-                        {element.type === 'verification' && <Square className="h-3 w-3" />}
-                        <span className="truncate">{element.type} {element.content ? `- ${element.content.substring(0, 15)}...` : ''}</span>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleElementDelete(element.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ElementList 
+              elements={elements}
+              selectedElement={selectedElement}
+              onSelectElement={handleElementSelect}
+              onDeleteElement={handleElementDelete}
+              onAddElement={handleAddElement}
+            />
           </TabsContent>
           
           <TabsContent value="properties" className="p-2 border rounded-md">
-            {selectedElement ? (
-              <ElementPropertiesPanel 
-                selectedElement={selectedElement}
-                onUpdateElement={handleElementUpdate}
-                onBringToFront={handleBringToFront}
-                onSendToBack={handleSendToBack}
-                onDelete={() => handleElementDelete(selectedElement.id)}
-              />
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Square className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>Select an element to edit its properties</p>
-              </div>
-            )}
+            <ElementPropertiesWrapper 
+              selectedElement={selectedElement}
+              onUpdateElement={handleElementUpdate}
+              onBringToFront={handleBringToFront}
+              onSendToBack={handleSendToBack}
+              onDelete={handleElementDelete}
+            />
           </TabsContent>
         </Tabs>
       </div>
       
       {/* Gradient picker dialog */}
-      <Dialog open={showGradientPicker} onOpenChange={setShowGradientPicker}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Gradient Editor</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            <div 
-              className="h-12 rounded border"
-              style={{ 
-                backgroundImage: `linear-gradient(${gradientAngle}deg, ${gradientColors.map(
-                  gc => `${gc.color} ${gc.position}%`
-                ).join(', ')})` 
-              }}
-            />
-            
-            <div>
-              <label className="text-xs block mb-1">Gradient Angle</label>
-              <div className="flex items-center gap-4">
-                <Slider
-                  value={[gradientAngle]}
-                  min={0}
-                  max={360}
-                  step={1}
-                  onValueChange={(values) => setGradientAngle(values[0])}
-                  className="flex-1"
-                />
-                <span className="text-sm w-10 text-right">{gradientAngle}°</span>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-xs">Color Stops</label>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleAddGradientColor}
-                  className="h-6 py-0 text-xs"
-                >
-                  Add Color
-                </Button>
-              </div>
-              
-              {gradientColors.map((colorStop, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <ColorPicker
-                    color={colorStop.color}
-                    onChange={(color) => handleUpdateGradientColor(index, color)}
-                  />
-                  <div className="flex items-center gap-1 flex-1">
-                    <Slider
-                      value={[colorStop.position]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(values) => handleUpdateGradientPosition(index, values[0])}
-                    />
-                    <span className="text-xs w-8 text-right">{colorStop.position}%</span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleRemoveGradientColor(index)}
-                    disabled={gradientColors.length <= 2}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            
-            <div>
-              <label className="text-xs block mb-2">Preset Gradients</label>
-              <div className="grid grid-cols-3 gap-2">
-                {presetGradients.map((gradient, index) => (
-                  <div 
-                    key={index} 
-                    className="h-12 rounded border cursor-pointer hover:opacity-90 transition-opacity"
-                    style={{ backgroundImage: gradient }}
-                    onClick={() => handleUsePresetGradient(gradient)}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowGradientPicker(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleApplyGradient}>
-                Apply Gradient
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GradientEditor 
+        open={showGradientPicker}
+        onOpenChange={setShowGradientPicker}
+        gradientAngle={gradientAngle}
+        gradientColors={gradientColors}
+        presetGradients={presetGradients}
+        onAngleChange={setGradientAngle}
+        onColorChange={handleUpdateGradientColor}
+        onPositionChange={handleUpdateGradientPosition}
+        onAddColor={handleAddGradientColor}
+        onRemoveColor={handleRemoveGradientColor}
+        onApplyGradient={handleApplyGradient}
+        onUsePreset={handleUsePresetGradient}
+      />
     </div>
   );
 };
