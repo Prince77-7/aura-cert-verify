@@ -10,6 +10,7 @@ import {
   getMarkupGoApiKey, 
   saveCustomFieldNames, 
   getCustomFieldNames,
+  fetchCustomFieldNamesAsync,
   saveMarkupGoTemplateId, 
   getMarkupGoTemplateId 
 } from '@/services/settingsService';
@@ -46,17 +47,25 @@ const SettingsPage = () => {
     const loadSettings = async () => {
       setLoading(true);
       try {
+        // Load API Key
         const existingKey = await getMarkupGoApiKey();
         if (existingKey) {
           setApiKey(existingKey);
         }
         
-        const existingFields = await getCustomFieldNames();
-        setCustomFields(existingFields);
-        
+        // Load Template ID
         const existingTemplateId = await getMarkupGoTemplateId();
         if (existingTemplateId) {
           setTemplateId(existingTemplateId);
+        }
+        
+        // Load Custom Fields - use the async version to get from Supabase if authenticated
+        if (isAuthenticated) {
+          const fields = await fetchCustomFieldNamesAsync();
+          setCustomFields(fields);
+        } else {
+          // For non-authenticated users, use the sync version
+          setCustomFields(getCustomFieldNames());
         }
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -106,8 +115,8 @@ const SettingsPage = () => {
     
     try {
       const updatedFields = [...customFields, trimmedName];
-      await saveCustomFieldNames(updatedFields);
       setCustomFields(updatedFields);
+      await saveCustomFieldNames(updatedFields);
       setNewFieldName(''); 
       toast.success(`Custom field "${trimmedName}" added.`);
     } catch (error) {
@@ -119,8 +128,8 @@ const SettingsPage = () => {
   const handleRemoveField = async (fieldNameToRemove: string) => {
     try {
       const updatedFields = customFields.filter(name => name !== fieldNameToRemove);
-      await saveCustomFieldNames(updatedFields);
       setCustomFields(updatedFields);
+      await saveCustomFieldNames(updatedFields);
       toast.success(`Custom field "${fieldNameToRemove}" removed.`);
     } catch (error) {
       console.error('Error removing field:', error);
@@ -148,8 +157,8 @@ const SettingsPage = () => {
 
       if (updatedFields.length > customFields.length) {
         try {
-          await saveCustomFieldNames(updatedFields);
           setCustomFields(updatedFields);
+          await saveCustomFieldNames(updatedFields);
           toast.success(`Imported ${updatedFields.length - customFields.length} new field(s) from JSON.`);
           setJsonInput(''); // Clear textarea after successful import
         } catch (error) {

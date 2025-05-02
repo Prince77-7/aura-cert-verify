@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";  // Updated import path
 import { syncLocalSettingsToSupabase } from "../services/settingsService";
 
 interface AuthContextType {
@@ -31,18 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (event === 'SIGNED_IN') {
         toast.success("Logged in successfully");
-      } else if (event === 'SIGNED_OUT') {
-        toast.info("Logged out");
-      }
-      
-      // If the user just signed in, sync their local settings to Supabase
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        
+        // If the user just signed in, sync their local settings to Supabase
         try {
-          // Sync local settings to Supabase if the user just signed in
           await syncLocalSettingsToSupabase();
         } catch (error) {
           console.error("Error syncing settings:", error);
         }
+      } else if (event === 'SIGNED_OUT') {
+        toast.info("Logged out");
       }
     });
 

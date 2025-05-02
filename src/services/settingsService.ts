@@ -30,6 +30,7 @@ export const saveMarkupGoApiKey = async (apiKey: string): Promise<void> => {
       const { data: existingSettings } = await supabase
         .from('user_settings')
         .select('id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user!.id)
         .single();
       
       if (existingSettings) {
@@ -47,13 +48,15 @@ export const saveMarkupGoApiKey = async (apiKey: string): Promise<void> => {
             markupgo_api_key: apiKey 
           });
       }
-    } else {
-      // Fall back to localStorage for non-authenticated users
-      localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
     }
+    
+    // Fall back to localStorage for non-authenticated users
+    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
   } catch (error) {
     console.error('Error saving API key:', error);
     toast.error('Failed to save API key');
+    // Fall back to localStorage
+    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
   }
 };
 
@@ -97,6 +100,7 @@ export const saveCustomFieldNames = async (fieldNames: string[]): Promise<void> 
       const { data: existingSettings } = await supabase
         .from('user_settings')
         .select('id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user!.id)
         .single();
       
       if (existingSettings) {
@@ -125,7 +129,27 @@ export const saveCustomFieldNames = async (fieldNames: string[]): Promise<void> 
   }
 };
 
-export const getCustomFieldNames = async (): Promise<string[]> => {
+// FIX: Return string[] directly instead of Promise<string[]>
+export const getCustomFieldNames = (): string[] => {
+  try {
+    // First try to get from localStorage
+    const storedValue = localStorage.getItem(CUSTOM_FIELDS_STORAGE_KEY);
+    if (storedValue) {
+      const parsedValue = JSON.parse(storedValue);
+      // Basic validation to ensure it's an array of strings
+      if (Array.isArray(parsedValue) && parsedValue.every(item => typeof item === 'string')) {
+        return parsedValue;
+      }
+    }
+    return []; // Return empty array if not found or error
+  } catch (error) {
+    console.error('Error parsing custom field names from local storage:', error);
+    return []; // Return empty array on error
+  }
+};
+
+// Add a new async version that can be used when needed
+export const fetchCustomFieldNamesAsync = async (): Promise<string[]> => {
   try {
     const authenticated = await isUserAuthenticated();
     
@@ -146,23 +170,11 @@ export const getCustomFieldNames = async (): Promise<string[]> => {
       }
     }
     
-    // Fall back to localStorage for non-authenticated users or if Supabase query failed
-    try {
-      const storedValue = localStorage.getItem(CUSTOM_FIELDS_STORAGE_KEY);
-      if (storedValue) {
-        const parsedValue = JSON.parse(storedValue);
-        // Basic validation to ensure it's an array of strings
-        if (Array.isArray(parsedValue) && parsedValue.every(item => typeof item === 'string')) {
-          return parsedValue;
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing custom field names from local storage:', error);
-    }
-    return []; // Return empty array if not found or error
+    // Fall back to localStorage
+    return getCustomFieldNames();
   } catch (error) {
     console.error('Error retrieving custom field names:', error);
-    return []; // Return empty array on error
+    return getCustomFieldNames(); // Fall back to localStorage on error
   }
 };
 
@@ -177,6 +189,7 @@ export const saveMarkupGoTemplateId = async (templateId: string): Promise<void> 
       const { data: existingSettings } = await supabase
         .from('user_settings')
         .select('id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user!.id)
         .single();
       
       if (existingSettings) {

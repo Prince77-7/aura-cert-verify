@@ -134,7 +134,10 @@ export const CertificateForm: React.FC<CertificateFormProps> = ({ onSuccess }) =
   }, []);
 
   useEffect(() => {
-    setCustomFieldNames(getCustomFieldNames());
+    // Fix: Use the synchronous version of getCustomFieldNames
+    // This avoids the TypeScript error with Promise<string[]>
+    const fields = getCustomFieldNames();
+    setCustomFieldNames(fields);
   }, []);
 
   // STEP 1: Create a certificate record with verification ID but mark it as inactive/pending

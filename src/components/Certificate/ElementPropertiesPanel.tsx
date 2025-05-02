@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { CertificateElement } from "@/types/CertificateElement";
 
 interface ElementPropertiesPanelProps {
     fontSize: string;
@@ -17,6 +19,7 @@ interface ElementPropertiesPanelProps {
     onAlignChange: (value: string) => void;
     onMarginTopChange: (value: string) => void;
     onMarginBottomChange: (value: string) => void;
+    element?: CertificateElement; // Add this optional prop to match AdvancedCertificateEditor usage
 }
 
 const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
