@@ -1,286 +1,359 @@
-
-import React from 'react';
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { CertificateElement } from "@/types/CertificateElement";
+import React, { useState, useEffect } from 'react';
+import { SketchPicker } from 'react-color';
+import { useCertificate } from '../../context/CertificateContext';
+import { Element } from '../../types/types';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Slider } from '../ui/slider';
+import { Switch } from '../ui/switch';
+import { Separator } from '../ui/separator';
 
 interface ElementPropertiesPanelProps {
-    fontSize?: string;
-    fontWeight?: string;
-    color?: string;
-    align?: string;
-    marginTop?: string;
-    marginBottom?: string;
-    onFontSizeChange?: (value: string) => void;
-    onFontWeightChange?: (value: string) => void;
-    onColorChange?: (value: string) => void;
-    onAlignChange?: (value: string) => void;
-    onMarginTopChange?: (value: string) => void;
-    onMarginBottomChange?: (value: string) => void;
-    element?: CertificateElement;
-    onUpdate?: (updatedElement: CertificateElement) => void;
-    onBringToFront?: () => void;
-    onSendToBack?: () => void;
-    onDelete?: () => void;
+  selectedElement: Element | null;
+  onUpdateElement: (updatedElement: Element) => void;
 }
 
-const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
-    fontSize = "",
-    fontWeight = "",
-    color = "#000000",
-    align = "left",
-    marginTop = "0",
-    marginBottom = "0",
-    onFontSizeChange = () => {},
-    onFontWeightChange = () => {},
-    onColorChange = () => {},
-    onAlignChange = () => {},
-    onMarginTopChange = () => {},
-    onMarginBottomChange = () => {},
-    element,
-    onUpdate,
-    onBringToFront,
-    onSendToBack,
-    onDelete
-}) => {
-    // If we have an element and onUpdate function, we'll edit the element directly
-    const handleFontSizeChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    fontSize: value
-                }
-            });
-        } else if (onFontSizeChange) {
-            onFontSizeChange(value);
-        }
-    };
+const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({ selectedElement, onUpdateElement }) => {
+  const { updateElement } = useCertificate();
+  const [name, setName] = useState(selectedElement?.name || '');
+  const [x, setX] = useState(selectedElement?.x || 0);
+  const [y, setY] = useState(selectedElement?.y || 0);
+  const [width, setWidth] = useState(selectedElement?.width || 100);
+  const [height, setHeight] = useState(selectedElement?.height || 50);
+  const [fontSize, setFontSize] = useState(selectedElement?.fontSize || 16);
+  const [fontFamily, setFontFamily] = useState(selectedElement?.fontFamily || 'Arial');
+  const [color, setColor] = useState(selectedElement?.color || '#000000');
+  const [bold, setBold] = useState(selectedElement?.bold || false);
+  const [italic, setItalic] = useState(selectedElement?.italic || false);
+  const [underline, setUnderline] = useState(selectedElement?.underline || false);
+  const [backgroundColor, setBackgroundColor] = useState(selectedElement?.backgroundColor || 'transparent');
+  const [opacity, setOpacity] = useState(selectedElement?.opacity || 1);
+  const [rotation, setRotation] = useState(selectedElement?.rotation || 0);
+  const [borderWidth, setBorderWidth] = useState(selectedElement?.borderWidth || 0);
+  const [borderColor, setBorderColor] = useState(selectedElement?.borderColor || '#000000');
+  const [borderRadius, setBorderRadius] = useState(selectedElement?.borderRadius || 0);
+  const [zIndex, setZIndex] = useState(selectedElement?.zIndex || 0);
+  const [hidden, setHidden] = useState(selectedElement?.hidden || false);
 
-    const handleFontWeightChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    fontWeight: value
-                }
-            });
-        } else if (onFontWeightChange) {
-            onFontWeightChange(value);
-        }
-    };
+  useEffect(() => {
+    if (selectedElement) {
+      setName(selectedElement.name || '');
+      setX(selectedElement.x || 0);
+      setY(selectedElement.y || 0);
+      setWidth(selectedElement.width || 100);
+      setHeight(selectedElement.height || 50);
+      setFontSize(selectedElement.fontSize || 16);
+      setFontFamily(selectedElement.fontFamily || 'Arial');
+      setColor(selectedElement.color || '#000000');
+      setBold(selectedElement.bold || false);
+      setItalic(selectedElement.italic || false);
+      setUnderline(selectedElement.underline || false);
+      setBackgroundColor(selectedElement.backgroundColor || 'transparent');
+      setOpacity(selectedElement.opacity || 1);
+      setRotation(selectedElement.rotation || 0);
+      setBorderWidth(selectedElement.borderWidth || 0);
+      setBorderColor(selectedElement.borderColor || '#000000');
+      setBorderRadius(selectedElement.borderRadius || 0);
+      setZIndex(selectedElement.zIndex || 0);
+      setHidden(selectedElement.hidden || false);
+    }
+  }, [selectedElement]);
 
-    const handleColorChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    color: value
-                }
-            });
-        } else if (onColorChange) {
-            onColorChange(value);
-        }
-    };
+  const updateProperty = (propertyName: string, value: any) => {
+    if (!selectedElement) return;
 
-    const handleAlignChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    textAlign: value as any
-                }
-            });
-        } else if (onAlignChange) {
-            onAlignChange(value);
-        }
-    };
+    const updatedElement = { ...selectedElement, [propertyName]: value };
+    onUpdateElement(updatedElement);
+    updateElement(updatedElement);
+  };
 
-    const handleMarginTopChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    marginTop: value
-                }
-            });
-        } else if (onMarginTopChange) {
-            onMarginTopChange(value);
-        }
-    };
+  if (!selectedElement) {
+    return <div className="p-4">Select an element to view its properties.</div>;
+  }
 
-    const handleMarginBottomChange = (value: string) => {
-        if (element && onUpdate) {
-            onUpdate({
-                ...element,
-                style: {
-                    ...element.style,
-                    marginBottom: value
-                }
-            });
-        } else if (onMarginBottomChange) {
-            onMarginBottomChange(value);
-        }
-    };
+  return (
+    <div className="p-4 space-y-4">
+      <h3 className="text-lg font-semibold">Element Properties</h3>
+      <Separator />
 
-    // Get values from element if available
-    const currentFontSize = element?.style?.fontSize || fontSize;
-    const currentFontWeight = element?.style?.fontWeight || fontWeight;
-    const currentColor = element?.style?.color || color;
-    const currentAlign = (element?.style?.textAlign as string) || align;
-    const currentMarginTop = element?.style?.marginTop || marginTop;
-    const currentMarginBottom = element?.style?.marginBottom || marginBottom;
+      <div>
+        <Label htmlFor="name">Name</Label>
+        <Input
+          type="text"
+          id="name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            updateProperty('name', e.target.value);
+          }}
+        />
+      </div>
 
-    return (
-        <div className="bg-secondary/50 p-4 rounded-md space-y-4">
-            <h4 className="text-sm font-medium">Element Properties</h4>
-
-            {/* Font Size */}
-            <div>
-                <Label htmlFor="font-size" className="text-xs">Font Size</Label>
-                <Input
-                    type="text"
-                    id="font-size"
-                    value={currentFontSize}
-                    onChange={(e) => handleFontSizeChange(e.target.value)}
-                    className="mt-1 text-xs"
-                />
-            </div>
-
-            {/* Font Weight */}
-            <div>
-                <Label htmlFor="font-weight" className="text-xs">Font Weight</Label>
-                <Input
-                    type="text"
-                    id="font-weight"
-                    value={currentFontWeight}
-                    onChange={(e) => handleFontWeightChange(e.target.value)}
-                    className="mt-1 text-xs"
-                />
-            </div>
-
-            {/* Text Color */}
-            <div>
-                <Label htmlFor="text-color" className="text-xs">Text Color</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                        type="color"
-                        id="text-color"
-                        value={currentColor}
-                        onChange={(e) => handleColorChange(e.target.value)}
-                        className="h-8 w-10"
-                    />
-                    <Input
-                        type="text"
-                        value={currentColor}
-                        onChange={(e) => handleColorChange(e.target.value)}
-                        className="text-xs"
-                    />
-                </div>
-            </div>
-
-            {/* Text Alignment */}
-            <div>
-                <Label className="text-xs">Text Alignment</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAlignChange('left')}
-                        className={currentAlign === 'left' ? 'bg-secondary' : ''}
-                    >
-                        <AlignLeft size={16} />
-                    </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAlignChange('center')}
-                        className={currentAlign === 'center' ? 'bg-secondary' : ''}
-                    >
-                        <AlignCenter size={16} />
-                    </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAlignChange('right')}
-                        className={currentAlign === 'right' ? 'bg-secondary' : ''}
-                    >
-                        <AlignRight size={16} />
-                    </Button>
-                </div>
-            </div>
-
-            {/* Margin Top */}
-            <div>
-                <Label htmlFor="margin-top" className="text-xs">Margin Top</Label>
-                <Input
-                    type="text"
-                    id="margin-top"
-                    value={currentMarginTop}
-                    onChange={(e) => handleMarginTopChange(e.target.value)}
-                    className="mt-1 text-xs"
-                />
-            </div>
-
-            {/* Margin Bottom */}
-            <div>
-                <Label htmlFor="margin-bottom" className="text-xs">Margin Bottom</Label>
-                <Input
-                    type="text"
-                    id="margin-bottom"
-                    value={currentMarginBottom}
-                    onChange={(e) => handleMarginBottomChange(e.target.value)}
-                    className="mt-1 text-xs"
-                />
-            </div>
-
-            {/* Layer controls */}
-            {element && onBringToFront && onSendToBack && (
-                <div>
-                    <Label className="text-xs block mb-2">Layer Controls</Label>
-                    <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={onBringToFront}
-                            className="text-xs flex items-center gap-1"
-                        >
-                            Bring to Front
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={onSendToBack}
-                            className="text-xs flex items-center gap-1"
-                        >
-                            Send to Back
-                        </Button>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete control */}
-            {element && onDelete && (
-                <div>
-                    <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={onDelete}
-                        className="w-full mt-2"
-                    >
-                        Delete Element
-                    </Button>
-                </div>
-            )}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="x">X Position</Label>
+          <Input
+            type="number"
+            id="x"
+            value={x}
+            onChange={(e) => {
+              setX(Number(e.target.value));
+              updateProperty('x', Number(e.target.value));
+            }}
+          />
         </div>
-    );
+
+        <div>
+          <Label htmlFor="y">Y Position</Label>
+          <Input
+            type="number"
+            id="y"
+            value={y}
+            onChange={(e) => {
+              setY(Number(e.target.value));
+              updateProperty('y', Number(e.target.value));
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="width">Width</Label>
+          <Input
+            type="number"
+            id="width"
+            value={width}
+            onChange={(e) => {
+              setWidth(Number(e.target.value));
+              updateProperty('width', Number(e.target.value));
+            }}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="height">Height</Label>
+          <Input
+            type="number"
+            id="height"
+            value={height}
+            onChange={(e) => {
+              setHeight(Number(e.target.value));
+              updateProperty('height', Number(e.target.value));
+            }}
+          />
+        </div>
+      </div>
+
+      {selectedElement.type === 'text' && (
+        <>
+          <Separator />
+          <h4 className="text-md font-semibold">Text Properties</h4>
+
+          <div>
+            <Label htmlFor="fontSize">Font Size</Label>
+            <Input
+              type="number"
+              id="fontSize"
+              value={fontSize}
+              onChange={(e) => {
+                setFontSize(Number(e.target.value));
+                updateProperty('fontSize', Number(e.target.value));
+              }}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="fontFamily">Font Family</Label>
+            <Input
+              type="text"
+              id="fontFamily"
+              value={fontFamily}
+              onChange={(e) => {
+                setFontFamily(e.target.value);
+                updateProperty('fontFamily', e.target.value);
+              }}
+            />
+          </div>
+
+          <div>
+            <Label>Color</Label>
+            <SketchPicker
+              color={color}
+              onChangeComplete={(c) => {
+                setColor(c.hex);
+                updateProperty('color', c.hex);
+              }}
+            />
+          </div>
+
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBold(!bold);
+                updateProperty('bold', !bold);
+              }}
+              active={bold}
+            >
+              Bold
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setItalic(!italic);
+                updateProperty('italic', !italic);
+              }}
+              active={italic}
+            >
+              Italic
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUnderline(!underline);
+                updateProperty('underline', !underline);
+              }}
+              active={underline}
+            >
+              Underline
+            </Button>
+          </div>
+        </>
+      )}
+
+      <Separator />
+      <h4 className="text-md font-semibold">Styling Properties</h4>
+
+      <div>
+        <Label>Background Color</Label>
+        <SketchPicker
+          color={backgroundColor}
+          onChangeComplete={(c) => {
+            setBackgroundColor(c.hex);
+            updateProperty('backgroundColor', c.hex);
+          }}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="opacity">Opacity</Label>
+        <Slider
+          id="opacity"
+          defaultValue={[opacity * 100]}
+          max={100}
+          step={1}
+          onValueChange={(value) => {
+            const newOpacity = value[0] / 100;
+            setOpacity(newOpacity);
+            updateProperty('opacity', newOpacity);
+          }}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="rotation">Rotation</Label>
+        <Input
+          type="number"
+          id="rotation"
+          value={rotation}
+          onChange={(e) => {
+            setRotation(Number(e.target.value));
+            updateProperty('rotation', Number(e.target.value));
+          }}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="borderWidth">Border Width</Label>
+          <Input
+            type="number"
+            id="borderWidth"
+            value={borderWidth}
+            onChange={(e) => {
+              setBorderWidth(Number(e.target.value));
+              updateProperty('borderWidth', Number(e.target.value));
+            }}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="borderRadius">Border Radius</Label>
+          <Input
+            type="number"
+            id="borderRadius"
+            value={borderRadius}
+            onChange={(e) => {
+              setBorderRadius(Number(e.target.value));
+              updateProperty('borderRadius', Number(e.target.value));
+            }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Border Color</Label>
+        <SketchPicker
+          color={borderColor}
+          onChangeComplete={(c) => {
+            setBorderColor(c.hex);
+            updateProperty('borderColor', c.hex);
+          }}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="zIndex">Z Index</Label>
+        <Input
+          type="number"
+          id="zIndex"
+          value={zIndex}
+          onChange={(e) => {
+            setZIndex(Number(e.target.value));
+            updateProperty('zIndex', Number(e.target.value));
+          }}
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Label htmlFor="hidden">Hidden</Label>
+        <Switch
+          id="hidden"
+          checked={hidden}
+          onCheckedChange={(checked) => {
+            setHidden(checked);
+            updateProperty('hidden', checked);
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+interface ButtonProps {
+  variant: 'outline' | 'default';
+  onClick: () => void;
+  active?: boolean;
+  children: React.ReactNode;
+}
+
+const Button: React.FC<ButtonProps> = ({ variant, onClick, active, children }) => {
+  const className = `
+    inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+    ${variant === 'outline'
+      ? 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground'
+      : 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+    }
+    ${active ? 'ring-2 ring-primary' : ''}
+    px-4 py-2
+  `;
+
+  return (
+    <button className={className} onClick={onClick}>
+      {children}
+    </button>
+  );
 };
 
 export default ElementPropertiesPanel;

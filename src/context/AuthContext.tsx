@@ -10,7 +10,6 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -95,35 +94,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signup = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            role: 'admin' // Set role for new users
-          }
-        }
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        return false;
-      }
-      
-      toast.success("Account created! Please check your email for verification.");
-      return true;
-    } catch (error) {
-      toast.error("Signup failed");
-      console.error(error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       setLoading(true);
@@ -138,7 +108,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Provide the auth context value to children
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, session, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, session, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
