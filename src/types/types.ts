@@ -36,3 +36,8 @@ export type ElementType =
   | "logo"
   | "badge"
   | "verification";
+
+// This ensures the CertificateElement type includes all the fields defined in Element
+export interface CertificateElement extends Element {
+  // Add any additional certificate-specific element properties here
+}

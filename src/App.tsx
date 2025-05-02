@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout/Layout";
 import SettingsPage from "./components/Settings/SettingsPage";
 
@@ -39,8 +39,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const { useAuth } = require("./context/AuthContext");
-  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -54,8 +52,16 @@ const App = () => {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/verify" element={<VerifyPage />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="*" element={<NotFound />} />
