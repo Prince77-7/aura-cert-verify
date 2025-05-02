@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,8 @@ import {
   saveMarkupGoTemplateId, 
   getMarkupGoTemplateId 
 } from '@/services/settingsService';
-import { X } from 'lucide-react'; // Icon for remove button
+import { X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 // Helper function to recursively extract keys from JSON, handling nesting
 const extractKeysFromJson = (obj: any, prefix = ''): string[] => {
@@ -32,68 +34,106 @@ const extractKeysFromJson = (obj: any, prefix = ''): string[] => {
 };
 
 const SettingsPage = () => {
+  const { isAuthenticated } = useAuth();
   const [apiKey, setApiKey] = useState<string>('');
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newFieldName, setNewFieldName] = useState<string>('');
   const [templateId, setTemplateId] = useState<string>('');
-  const [jsonInput, setJsonInput] = useState<string>(''); // State for JSON input textarea
+  const [jsonInput, setJsonInput] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const existingKey = getMarkupGoApiKey();
-    if (existingKey) {
-      setApiKey(existingKey);
-    }
-    const existingFields = getCustomFieldNames();
-    setCustomFields(existingFields);
-    const existingTemplateId = getMarkupGoTemplateId();
-    if (existingTemplateId) {
-      setTemplateId(existingTemplateId);
-    }
-  }, []);
+    const loadSettings = async () => {
+      setLoading(true);
+      try {
+        const existingKey = await getMarkupGoApiKey();
+        if (existingKey) {
+          setApiKey(existingKey);
+        }
+        
+        const existingFields = await getCustomFieldNames();
+        setCustomFields(existingFields);
+        
+        const existingTemplateId = await getMarkupGoTemplateId();
+        if (existingTemplateId) {
+          setTemplateId(existingTemplateId);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast.error('Failed to load settings');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSettings();
+  }, [isAuthenticated]);
 
-  const handleSaveApiKey = () => {
-    saveMarkupGoApiKey(apiKey);
-    toast.success('MarkupGo API Key saved!');
+  const handleSaveApiKey = async () => {
+    try {
+      await saveMarkupGoApiKey(apiKey);
+      toast.success('MarkupGo API Key saved!');
+    } catch (error) {
+      console.error('Error saving API key:', error);
+      toast.error('Failed to save API key');
+    }
   };
 
-  const handleSaveTemplateId = () => {
-    saveMarkupGoTemplateId(templateId);
-    toast.success('MarkupGo Template ID saved!');
+  const handleSaveTemplateId = async () => {
+    try {
+      await saveMarkupGoTemplateId(templateId);
+      toast.success('MarkupGo Template ID saved!');
+    } catch (error) {
+      console.error('Error saving template ID:', error);
+      toast.error('Failed to save template ID');
+    }
   };
 
-  const handleAddField = () => {
+  const handleAddField = async () => {
     const trimmedName = newFieldName.trim();
     if (!trimmedName) {
       toast.error("Field name cannot be empty.");
       return;
     }
     if (/\s/.test(trimmedName)) {
-        toast.error("Field name should not contain spaces. Use underscores (_) or camelCase.");
-        return;
+      toast.error("Field name should not contain spaces. Use underscores (_) or camelCase.");
+      return;
     }
     if (customFields.includes(trimmedName)) {
       toast.warning(`Field "${trimmedName}" already exists.`);
       return;
     }
-    const updatedFields = [...customFields, trimmedName];
-    setCustomFields(updatedFields);
-    saveCustomFieldNames(updatedFields);
-    setNewFieldName(''); 
-    toast.success(`Custom field "${trimmedName}" added.`);
+    
+    try {
+      const updatedFields = [...customFields, trimmedName];
+      await saveCustomFieldNames(updatedFields);
+      setCustomFields(updatedFields);
+      setNewFieldName(''); 
+      toast.success(`Custom field "${trimmedName}" added.`);
+    } catch (error) {
+      console.error('Error adding field:', error);
+      toast.error('Failed to add field');
+    }
   };
 
-  const handleRemoveField = (fieldNameToRemove: string) => {
-    const updatedFields = customFields.filter(name => name !== fieldNameToRemove);
-    setCustomFields(updatedFields);
-    saveCustomFieldNames(updatedFields);
-    toast.success(`Custom field "${fieldNameToRemove}" removed.`);
+  const handleRemoveField = async (fieldNameToRemove: string) => {
+    try {
+      const updatedFields = customFields.filter(name => name !== fieldNameToRemove);
+      await saveCustomFieldNames(updatedFields);
+      setCustomFields(updatedFields);
+      toast.success(`Custom field "${fieldNameToRemove}" removed.`);
+    } catch (error) {
+      console.error('Error removing field:', error);
+      toast.error('Failed to remove field');
+    }
   };
 
-  const handleImportFromJson = () => {
+  const handleImportFromJson = async () => {
     if (!jsonInput.trim()) {
       toast.info('Please paste JSON data into the text area first.');
       return;
     }
+    
     try {
       const parsedJson = JSON.parse(jsonInput);
       if (typeof parsedJson !== 'object' || parsedJson === null || Array.isArray(parsedJson)) {
@@ -107,23 +147,48 @@ const SettingsPage = () => {
       const updatedFields = [...new Set([...customFields, ...extracted])];
 
       if (updatedFields.length > customFields.length) {
-        setCustomFields(updatedFields);
-        saveCustomFieldNames(updatedFields);
-        toast.success(`Imported ${updatedFields.length - customFields.length} new field(s) from JSON.`);
-        setJsonInput(''); // Clear textarea after successful import
+        try {
+          await saveCustomFieldNames(updatedFields);
+          setCustomFields(updatedFields);
+          toast.success(`Imported ${updatedFields.length - customFields.length} new field(s) from JSON.`);
+          setJsonInput(''); // Clear textarea after successful import
+        } catch (error) {
+          console.error('Error saving imported fields:', error);
+          toast.error('Failed to save imported fields');
+        }
       } else {
         toast.info('No new fields found in the provided JSON.');
       }
-
     } catch (error) {
       console.error("Error parsing JSON:", error);
       toast.error('Failed to parse JSON. Please check the format.');
     }
   };
 
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4">
+        <h2 className="text-2xl font-bold mb-6">Settings</h2>
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 border-t-2 border-b-2 border-primary rounded-full animate-spin"></div>
+          <span className="ml-3">Loading settings...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-6">Settings</h2>
+
+      {!isAuthenticated && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md mb-6 border border-yellow-200 dark:border-yellow-900">
+          <p className="text-yellow-800 dark:text-yellow-300">
+            You are not logged in. Settings will be saved locally in your browser. 
+            To sync settings across devices, please log in.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-6 max-w-md">
         <div className="space-y-4 border-b pb-6">
@@ -142,7 +207,9 @@ const SettingsPage = () => {
               <Button onClick={handleSaveApiKey}>Save Key</Button>
             </div>
             <p className="text-sm text-muted-foreground">
-              Your API key is stored locally in your browser.
+              {isAuthenticated 
+                ? "Your API key is stored securely in your account." 
+                : "Your API key is stored locally in your browser."}
             </p>
           </div>
           <div className="space-y-2">
@@ -216,8 +283,6 @@ const SettingsPage = () => {
               Extracts all keys (including nested ones like `object.key`) from the JSON and adds them to the list above.
             </p>
           </div>
-           {/* --- End JSON Import Section --- */}
-
         </div>
       </div>
     </div>

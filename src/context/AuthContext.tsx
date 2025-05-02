@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { syncLocalSettingsToSupabase } from "../services/settingsService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -24,19 +24,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setIsAuthenticated(!!newSession?.user);
-        
-        if (event === 'SIGNED_IN') {
-          toast.success("Logged in successfully");
-        } else if (event === 'SIGNED_OUT') {
-          toast.info("Logged out");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session?.user);
+      
+      if (event === 'SIGNED_IN') {
+        toast.success("Logged in successfully");
+      } else if (event === 'SIGNED_OUT') {
+        toast.info("Logged out");
+      }
+      
+      // If the user just signed in, sync their local settings to Supabase
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        try {
+          // Sync local settings to Supabase if the user just signed in
+          await syncLocalSettingsToSupabase();
+        } catch (error) {
+          console.error("Error syncing settings:", error);
         }
       }
-    );
+    });
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
