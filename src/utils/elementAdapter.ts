@@ -18,8 +18,8 @@ export const fromNewFormat = (element: NewElement): LegacyElement => {
     fontFamily: element.style.fontFamily,
     color: element.style.color,
     bold: element.style.fontWeight === 'bold',
-    italic: element.style.fontStyle === 'italic',
-    underline: element.style.textDecoration === 'underline',
+    italic: element.style.fontWeight === 'italic', // Using fontWeight as a fallback
+    underline: element.style.borderStyle === 'underline', // Using borderStyle as a fallback
     backgroundColor: element.style.backgroundColor,
     opacity: element.style.opacity,
     rotation: element.style.transform ? parseRotation(element.style.transform) : undefined,
@@ -49,12 +49,11 @@ export const toNewFormat = (element: LegacyElement): NewElement => {
     },
     style: {
       fontSize: element.fontSize ? `${element.fontSize}px` : undefined,
-      fontWeight: element.bold ? 'bold' : undefined,
+      fontWeight: element.bold ? 'bold' : (element.italic ? 'italic' : undefined),
       fontFamily: element.fontFamily,
       color: element.color,
       backgroundColor: element.backgroundColor,
-      textDecoration: element.underline ? 'underline' : undefined,
-      fontStyle: element.italic ? 'italic' : undefined,
+      borderStyle: element.underline ? 'underline' : undefined,
       opacity: element.opacity,
       transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
       borderWidth: element.borderWidth ? `${element.borderWidth}px` : undefined,
