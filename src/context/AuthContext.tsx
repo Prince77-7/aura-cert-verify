@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";  // Updated import path
+import { supabase } from "@/lib/supabaseClient";
 import { syncLocalSettingsToSupabase } from "../services/settingsService";
 
 interface AuthContextType {
@@ -14,36 +15,40 @@ interface AuthContextType {
   loading: boolean;
 }
 
+// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+// Export the provider component
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
-      
-      if (event === 'SIGNED_IN') {
-        toast.success("Logged in successfully");
+    // Set up auth state listener - must be set up first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsAuthenticated(!!currentSession?.user);
         
-        // If the user just signed in, sync their local settings to Supabase
-        try {
-          await syncLocalSettingsToSupabase();
-        } catch (error) {
-          console.error("Error syncing settings:", error);
+        if (event === 'SIGNED_IN') {
+          toast.success("Logged in successfully");
+          
+          // If the user just signed in, sync their local settings to Supabase
+          try {
+            await syncLocalSettingsToSupabase();
+          } catch (error) {
+            console.error("Error syncing settings:", error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          toast.info("Logged out");
         }
-      } else if (event === 'SIGNED_OUT') {
-        toast.info("Logged out");
       }
-    });
+    );
 
-    // Get initial session
+    // Get initial session - must be done after setting up the listener
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
@@ -51,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
+    // Clean up subscription when component unmounts
     return () => {
       subscription.unsubscribe();
     };
@@ -117,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Provide the auth context value to children
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, session, login, signup, logout, loading }}>
       {children}
@@ -124,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Create and export the useAuth hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

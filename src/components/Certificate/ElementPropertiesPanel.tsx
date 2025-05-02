@@ -19,7 +19,11 @@ interface ElementPropertiesPanelProps {
     onAlignChange: (value: string) => void;
     onMarginTopChange: (value: string) => void;
     onMarginBottomChange: (value: string) => void;
-    element?: CertificateElement; // Add this optional prop to match AdvancedCertificateEditor usage
+    element?: CertificateElement;
+    onUpdate?: (updatedElement: CertificateElement) => void;
+    onBringToFront?: () => void;
+    onSendToBack?: () => void;
+    onDelete?: () => void;
 }
 
 const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
