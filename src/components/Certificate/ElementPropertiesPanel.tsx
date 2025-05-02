@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SketchPicker } from 'react-color';
 import { useCertificate } from '@/context/CertificateContext';
@@ -12,9 +11,12 @@ import { CertificateElement } from '@/types/types';
 interface ElementPropertiesPanelProps {
   selectedElement: CertificateElement | null;
   onUpdateElement: (updatedElement: CertificateElement) => void;
+  onBringToFront?: () => void;
+  onSendToBack?: () => void;
+  onDelete?: () => void;
 }
 
-const ElementPropertiesPanel = ({ selectedElement, onUpdateElement }: ElementPropertiesPanelProps) => {
+const ElementPropertiesPanel = ({ selectedElement, onUpdateElement, onBringToFront, onSendToBack, onDelete }: ElementPropertiesPanelProps) => {
   const { updateElement } = useCertificate();
   const [name, setName] = useState(selectedElement?.name || '');
   const [x, setX] = useState(selectedElement?.x || 0);

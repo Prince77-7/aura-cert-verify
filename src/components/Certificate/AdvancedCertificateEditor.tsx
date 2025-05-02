@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -890,8 +889,8 @@ const AdvancedCertificateEditor: React.FC<AdvancedCertificateEditorProps> = ({
           <TabsContent value="properties" className="p-2 border rounded-md">
             {selectedElement ? (
               <ElementPropertiesPanel 
-                element={selectedElement}
-                onUpdate={handleElementUpdate}
+                selectedElement={selectedElement}
+                onUpdateElement={handleElementUpdate}
                 onBringToFront={handleBringToFront}
                 onSendToBack={handleSendToBack}
                 onDelete={() => handleElementDelete(selectedElement.id)}
